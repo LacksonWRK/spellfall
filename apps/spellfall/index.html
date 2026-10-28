@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Spellfall</title>
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Cabin+Sketch:wght@400;700&display=swap">
@@ -331,7 +332,7 @@ table.games td,table.games th{padding:7px 8px;border-bottom:1px solid var(--chal
   <section id="scr-lobby" class="screen" hidden>
     <div class="wrap">
       <div class="topbar">
-        <button class="btn ghost small" data-act="home">← Players</button>
+        <button class="btn ghost small" data-act="home">← Today</button>
         <div class="me"><span class="pav" id="l-av"></span><div><h2 id="l-name"></h2><small id="l-sub"></small></div></div>
         <button class="hold" data-hold="lobby"><span class="ring"></span>Grown-ups</button>
       </div>
@@ -437,9 +438,13 @@ table.games td,table.games th{padding:7px 8px;border-bottom:1px solid var(--chal
 </div>
 <div class="toast" id="toast" hidden role="status"></div>
 
+<script src="../../js/core.js"></script>
 <script>
 (() => {
 'use strict';
+const HUB = window.Hub; HUB.store.load();
+const QS = new URLSearchParams(location.search);
+const hubHref = h => '../../index.html' + (h || '');
 /* ---------- helpers ---------- */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -568,56 +573,18 @@ function confirmBox(msg, okLabel, onOk) {
 
 /* ---------- storage ---------- */
 const Store = {
-  mode:'loading', db:null, chains:{}, timers:{}, pending:{}, deleted:new Set(), LS:'spellfall.players.v1',
-  readLocal() { try { const j = JSON.parse(localStorage.getItem(this.LS) || 'null'); return Array.isArray(j) ? j : null; } catch { return null; } },
-  writeLocal() { try { localStorage.setItem(this.LS, JSON.stringify(S.players)); } catch {} },
-  async init() {
-    let db = null;
-    try { if (window.claude && typeof window.claude.use === 'function') db = await window.claude.use('db'); } catch { db = null; }
-    if (db) { this.db = db; this.mode = 'db'; this.listen(); }
-    else { this.mode = 'local'; S.players = sortPlayers(this.readLocal() || []); S.loaded = true; onData(); }
-  },
-  listen() {
-    const fallback = setTimeout(() => { if (!S.loaded) { S.loaded = true; onData(); } }, 4000);
-    this.db.collection('players').onSnapshot(snap => {
-      let list = snap.docs.filter(d => d.exists && !this.deleted.has(d.id)).map(d => ({ ...clone(d.data()), id:d.id }));
-      if (!list.length && snap.metadata.fromCache && !S.loaded) return;
-      list = list.map(p => this.pending[p.id] || p);
-      for (const id in this.pending) if (!list.some(p => p.id === id)) list.push(this.pending[id]);
-      S.players = sortPlayers(list);
-      if (!S.loaded) { S.loaded = true; clearTimeout(fallback); }
-      onData();
-    }, () => { toast('Lost the connection to saved games. Reopen the page to reconnect.'); });
-  },
-  save(p, { now = false } = {}) {
+  mode:'local',
+  readLocal() { return HUB.store.spellfallPlayers(); },
+  writeLocal() { HUB.store.saveSpellfallPlayers(S.players); },
+  async init() { S.players = sortPlayers(this.readLocal()); S.loaded = true; onData(); },
+  save(p) {
     const i = S.players.findIndex(x => x.id === p.id);
     if (i < 0) S.players.push(p); else S.players[i] = p;
     S.players = sortPlayers(S.players);
-    if (this.mode !== 'db') { this.writeLocal(); return Promise.resolve(); }
-    this.pending[p.id] = p;
-    clearTimeout(this.timers[p.id]);
-    return new Promise(res => { this.timers[p.id] = setTimeout(() => this.flush(p.id).then(res), now ? 0 : 450); });
+    this.writeLocal(); return Promise.resolve();
   },
-  flush(id) {
-    const data = this.pending[id];
-    if (!data) return this.chains[id] || Promise.resolve();
-    const body = clone(data); delete body.id;
-    const ref = this.db.collection('players').doc(id);
-    this.chains[id] = (this.chains[id] || Promise.resolve())
-      .then(() => ref.set(body))
-      .catch(async e => { if (e && e.code === 'unavailable') { await sleep(700 + Math.random() * 900); return ref.set(body); } throw e; })
-      .catch(writeErr)
-      .finally(() => { if (this.pending[id] === data) delete this.pending[id]; });
-    return this.chains[id];
-  },
-  remove(id) {
-    S.players = S.players.filter(p => p.id !== id);
-    delete this.pending[id]; clearTimeout(this.timers[id]);
-    if (this.mode !== 'db') { this.writeLocal(); return; }
-    this.deleted.add(id);
-    this.chains[id] = (this.chains[id] || Promise.resolve()).then(() => this.db.collection('players').doc(id).delete()).catch(writeErr);
-  },
-  label() { return this.mode === 'db' ? 'Saved to your Claude account. Opens with the same players on any device.' : 'Saved in this browser only.'; }
+  remove(id) { S.players = S.players.filter(p => p.id !== id); HUB.store.removeKid(id); },
+  label() { return 'Saved on this device. Back it up from Parent settings in the hub.'; }
 };
 function writeErr(e) {
   const c = e && e.code;
@@ -1492,6 +1459,7 @@ function pruneStats(p) {
 
 /* ---------- screens ---------- */
 function show(name) {
+  if (name === 'home' || name === 'setup') { location.href = hubHref(name === 'setup' ? '#/setup' : (S.pid && cur() ? '#/kid/' + S.pid : '#/')); return; }
   S.screen = name;
   for (const el of $$('.screen')) el.hidden = el.id !== 'scr-' + name;
   const fn = { home:renderHome, setup:renderSetup, lobby:renderLobby, grown:renderGrown, results:renderResults }[name];
@@ -1499,8 +1467,19 @@ function show(name) {
   const scr = $('#scr-' + name); if (scr && name !== 'game') scr.scrollTop = 0;
 }
 function onData() {
-  if (S.screen === 'loading') return show(S.players.length ? 'home' : 'setup');
-  if (S.screen === 'home') { if (!S.players.length) show('setup'); else renderHome(); }
+  if (S.screen === 'loading') {
+    if (!S.players.length) { location.replace(hubHref('#/setup')); return; }
+    const want = QS.get('kid'), p = S.players.find(x => x.id === want) || null;
+    if (p && QS.get('grown')) { S.pid = p.id; S.gpid = p.id; S.from = 'lobby'; return openGrownChecked(); }
+    if (p) {
+      S.pid = p.id;
+      const m = QS.get('mode');
+      if (m && ['spell', 'hidden', 'type'].includes(m) && p.mode !== m) { const q = clone(p); q.mode = m; Store.save(q); }
+      return show('lobby');
+    }
+    location.replace(hubHref('#/')); return;
+  }
+  if (S.screen === 'home') { location.href = hubHref('#/'); return; }
   else if (S.screen === 'lobby') { if (!cur()) show('home'); else renderLobby(); }
   else if (S.screen === 'grown') { if (!isEditingGrown()) renderGrown(); }
   else if (S.screen === 'setup' && S.players.length) show('home');
@@ -1821,7 +1800,7 @@ Reply with only JSON in this shape:
     if (S.scan && S.scan.ctl !== ctl) return;
     const code = e && e.code;
     if (code === 'cancelled') S.scan = null;
-    else { S.scan = { state:'error', pid:p.id, msg:SCAN_ERR[code] || 'Something went wrong reading the photo. Try again, or type the words.' }; if (code === 'images_unavailable' || code === 'sampling_disabled') { S.canScan = false; S.scanNote = SCAN_ERR[code]; } }
+    else { S.scan = { state:'error', pid:p.id, msg:SCAN_ERR[code] || HUB.ai.errorText(e) }; if (code === 'images_unavailable' || code === 'sampling_disabled') { S.canScan = false; S.scanNote = SCAN_ERR[code]; } }
   } finally { URL.revokeObjectURL(url); }
   if (S.screen === 'grown') renderGrown();
 }
@@ -1833,12 +1812,21 @@ function openGrown() {
   S.draft = null; S.addForm = false;
   show('grown');
 }
+async function openGrownChecked() {
+  if (HUB.pin.isSet()) {
+    const v = window.prompt('Parent PIN');
+    if (v === null) { if (S.screen === 'loading') show('lobby'); return; }
+    if (!(await HUB.pin.check(String(v).trim()))) { toast('That PIN didn’t match.'); if (S.screen === 'loading') show('lobby'); return; }
+  }
+  if (S.screen === 'loading') { S.screen = 'lobby'; }
+  openGrown();
+}
 function closeGrown() {
   if (S.scan && S.scan.ctl) { try { S.scan.ctl.abort(); } catch {} }
   S.draft = null; S.scan = null; S.addForm = false;
-  if (!S.players.length) return show('setup');
+  if (!S.players.length) { location.href = hubHref('#/setup'); return; }
   if (S.from === 'lobby' && cur()) return show('lobby');
-  show('home');
+  location.href = hubHref(S.pid ? '#/kid/' + S.pid : '#/');
 }
 
 /* ---------- events ---------- */
@@ -1847,7 +1835,7 @@ document.addEventListener('click', e => {
   const act = el.dataset.act;
   switch (act) {
     case 'pick': S.pid = el.dataset.pid; show('lobby'); break;
-    case 'home': show('home'); break;
+    case 'home': location.href = hubHref(S.pid ? '#/kid/' + S.pid : '#/'); break;
     case 'theme': { const p = clone(cur()); p.theme = el.dataset.val; Store.save(p); renderLobby(); break; }
     case 'say': Speech.say(el.dataset.w, { rate:.8, interrupt:true }); break;
     case 's-av': { const r = S.setupRows[+el.dataset.i]; r.avatar = AVATARS[(AVATARS.indexOf(r.avatar) + 1) % AVATARS.length]; el.textContent = r.avatar; break; }
@@ -1886,7 +1874,7 @@ document.addEventListener('click', e => {
 $('#play').addEventListener('click', () => startGame());
 $('#s-create').addEventListener('click', createFromSetup);
 $('#r-again').addEventListener('click', () => { const r = S.lastResult; if (!r) return; S.pid = r.pid; if (!cur()) return show('home'); startGame(r.type ? { mode:'type', lidx:r.nextIdx } : { mode:r.hidden ? 'hidden' : 'spell' }); });
-$('#r-menu').addEventListener('click', () => { if (S.lastResult && S.players.some(p => p.id === S.lastResult.pid)) { S.pid = S.lastResult.pid; show('lobby'); } else show('home'); });
+$('#r-menu').addEventListener('click', () => { if (S.lastResult && S.players.some(p => p.id === S.lastResult.pid)) { S.pid = S.lastResult.pid; show('lobby'); } else location.href = hubHref('#/'); });
 
 let nameT = 0;
 document.addEventListener('input', e => {
@@ -1920,7 +1908,7 @@ document.addEventListener('pointerdown', e => {
   const b = e.target.closest('[data-hold]'); if (!b) return;
   e.preventDefault(); endHold();
   const t0 = performance.now();
-  const step = () => { const k = Math.min(1, (performance.now() - t0) / 1100); b.style.setProperty('--p', k); if (k >= 1) { endHold(); b.dataset.opened = '1'; openGrown(); } else if (hold) hold.raf = requestAnimationFrame(step); };
+  const step = () => { const k = Math.min(1, (performance.now() - t0) / 1100); b.style.setProperty('--p', k); if (k >= 1) { endHold(); b.dataset.opened = '1'; openGrownChecked(); } else if (hold) hold.raf = requestAnimationFrame(step); };
   hold = { b, raf:requestAnimationFrame(step) };
 });
 ['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, endHold, true));
@@ -1940,18 +1928,10 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', onRe
 
 /* ---------- capabilities ---------- */
 async function initSample() {
-  const c = window.claude;
-  if (!c || typeof c.use !== 'function') { S.scanNote = 'Photo scanning works when this game is open in Claude. For now, type the words in.'; return; }
-  try {
-    const sample = await c.use('sample');
-    if (sample) {
-      S.sample = sample;
-      const lim = await sample.limits().catch(() => null);
-      S.limits = lim; S.canScan = !!(lim && lim.images);
-      if (S.canScan) $('#scan-file').accept = (lim.images.mediaTypes || []).join(',') || 'image/*';
-      else S.scanNote = 'Photo scanning isn’t available in this view. Type the words, or send the photo to Claude in chat and ask it to load the list.';
-    } else S.scanNote = 'Photo scanning isn’t available in this view. Type the words, or send the photo to Claude in chat and ask it to load the list.';
-  } catch { S.scanNote = 'Photo scanning isn’t available right now. Type the words in instead.'; }
+  if (HUB.ai.available()) {
+    S.sample = { json:(prompt, o = {}) => HUB.ai.json(prompt, { images:o.images, signal:o.signal }).catch(e => { if (e.code === 'no_key') e.code = 'sampling_disabled'; throw e; }) };
+    S.limits = { images:{ mediaTypes:[] } }; S.canScan = true;
+  } else { S.canScan = false; S.scanNote = 'To scan a photo, add your Claude API key in the hub: Parents → Settings. You can always type the words.'; }
   if (S.screen === 'grown' && !isEditingGrown()) renderGrown();
 }
 

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob: data:; connect-src https://api.anthropic.com; object-src 'none'; base-uri 'self'">
+<title>Spellfall Homeschool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Cabin+Sketch:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/hub.css">
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<input type="file" id="file" class="vh" accept="image/*" multiple>
+<input type="file" id="importfile" class="vh" accept="application/json,.json">
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true"><div class="box" id="modal-box"></div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+<script src="js/core.js"></script>
+<script src="js/content.js"></script>
+<script src="js/hub.js"></script>
+</body>
+</html>
