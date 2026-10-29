@@ -81,6 +81,16 @@ a{color:var(--yellow)}
 .ph-e{color:rgba(251,250,243,.35);margin-left:4px}
 @media (prefers-reduced-motion:reduce){.ph-word.falling{animation:none}}
 
+/* spell-a-rocket */
+.rk-gauge{position:relative;height:34px;border-radius:999px;background:rgba(0,0,0,.25);overflow:hidden}
+.rk-gauge i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--orange),var(--yellow))}
+.rk-gauge span{position:relative;display:block;text-align:center;line-height:34px;font-weight:700}
+.rk-sky{width:100%;height:auto;aspect-ratio:8/9;max-height:62vh;border-radius:16px;display:block;background:#9fd0ea}
+.rk-meter{position:relative;height:26px;border-radius:999px;background:linear-gradient(90deg,var(--bad),var(--orange) 30%,var(--good) 45%,var(--good) 55%,var(--orange) 70%,var(--bad))}
+.rk-meter i{position:absolute;top:-6px;bottom:-6px;width:6px;margin-left:-3px;border-radius:3px;background:var(--chalk);box-shadow:0 0 0 2px var(--board)}
+.rk-height{font-family:var(--f-display);font-weight:700;font-size:clamp(48px,10vw,80px);color:var(--yellow);margin:0}
+.rk-result{align-items:stretch}
+
 /* welcome steps */
 .stepper{list-style:none;margin:0;padding:0;display:flex;justify-content:center;gap:8px 18px;flex-wrap:wrap;font-size:15px;color:var(--chalk-dim)}
 .stepper li{display:flex;align-items:center;gap:8px}

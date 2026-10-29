@@ -421,6 +421,7 @@ table.games td,table.games th{padding:7px 8px;border-bottom:1px solid var(--chal
       <div class="res-score" id="r-score">0</div>
       <p class="res-sub" id="r-sub">points</p>
       <div class="newbest" id="r-best" hidden>New high score!</div>
+      <p class="res-sub" id="r-rocket" hidden></p>
       <div class="stats" id="r-stats"></div>
       <div class="paper" id="r-practice"></div>
       <div class="row"><button class="btn primary big" id="r-again">Play again</button><button class="btn ghost" id="r-menu">Menu</button></div>
@@ -1591,6 +1592,9 @@ function renderResults() {
   const confetti = () => { if (RM) return; const cols = Object.values(COLORS); cf.innerHTML = Array.from({ length: 60 }, (_, i) => `<i style="left:${rand(0, 100).toFixed(1)}%;background:${cols[i % cols.length]};animation-delay:${rand(0, .8).toFixed(2)}s;transform:rotate(${rand(0, 180).toFixed(0)}deg)"></i>`).join(''); };
   const statsHtml = rows => rows.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
   $('#r-stars').hidden = !(r.type || r.hidden);
+  const rk = !r.type && HUB.store.kid(r.pid), got = rk ? (r.hidden ? r.first : r.spelled) || 0 : 0, rkEl = $('#r-rocket'); // Spell-a-Rocket fuel from this round
+  rkEl.hidden = !got;
+  if (got) { const f = Math.min(HUB.ROCKET_TANK, rk.rocket.fuel || 0); rkEl.textContent = f >= HUB.ROCKET_TANK ? `🚀 +${got} fuel · tank full! Launch your rocket from your page.` : `🚀 +${got} fuel · rocket tank ${f} / ${HUB.ROCKET_TANK}`; }
   if (r.hidden) {
     $('#r-title').textContent = r.quit ? `Stopped early, ${r.name}` : r.first === r.total ? `Every word on the first try, ${r.name}!` : `${r.first} of ${r.total} on the first try!`;
     $('#r-stars').innerHTML = starRow(r.stars);

@@ -14,6 +14,7 @@
     ['Turn a quiz or study sheet into flashcards', 'flashcards'],
     ['Give a spelling test out loud', 'spelling'],
     ['Practice phonics sounds (K–2nd)', 'phonics'],
+    ['Launch the spelling rocket', 'rocket'],
     ['Make the spelling game easier or harder', 'spelling'],
     ['Change the daily checklist', 'today'],
     ['Change the weekly family goal', 'goal'],
@@ -103,6 +104,11 @@
         <li><b>Magic-e Door</b>: tap <b>+ e</b> and hear the word change, like <i>cap</i> to <i>cape</i>. Then your child picks which of the two words they heard.</li>
       </ul>
       <p>A first-try answer counts toward the stars. A finished game checks off a Today item linked to <b>Phonics</b>. To add one, see <a href="#/help/today">Today checklist</a>.</p>` },
+
+    { id: 'rocket', icon: '🚀', title: 'Spell-a-Rocket', sub: 'Spelling fuels a launch', body: `
+      <p>Every word your child spells right in the spelling game or hidden words adds one unit of fuel. The results screen shows how much they earned. The tank holds 25.</p>
+      <p>When the tank is full, the <b>Rocket</b> tile on their page says <b>Ready to launch!</b> A needle swings across a power meter. Tapping <b>Launch</b> while it’s in the green gives the most thrust and the straightest flight.</p>
+      <p>The flight uses real thrust, gravity and air drag. Its highest point is the score, and the best one is your child’s record to beat. A launch uses the whole tank, so it’s back to spelling to refuel.</p>` },
 
     { id: 'lists', icon: '📝', title: 'Spelling lists', sub: 'Typed, built-in, or scanned', body: `
       <p>Each child has one list for the week. Setting a new one moves the old list to <b>Past weeks</b>, with its scores.</p>

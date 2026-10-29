@@ -1,7 +1,7 @@
 /* Spellfall Homeschool hub: kid picker, Today, Flashcards, Math, Parent mode. */
 (function () {
   'use strict';
-  const { store, ai, speech, pin, uid, clone, today, VERSION, FEEDBACK_EMAIL } = window.Hub;
+  const { store, ai, speech, pin, uid, clone, today, VERSION, FEEDBACK_EMAIL, ROCKET_TANK } = window.Hub;
   const feedbackHref = () => `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`Spellfall feedback (v${VERSION})`)}&body=${encodeURIComponent(`Version ${VERSION}\nDevice: \n\nWhat happened, or what would help:\n`)}`;
   const C = window.HubContent;
   const $ = (s, r = document) => r.querySelector(s);
@@ -88,12 +88,13 @@
       const k = store.kid(r[1]); if (!k) return go('#/');
       if (r[2] === 'flashcards') return r[3] ? renderStudy(k, r[3]) : renderDecks(k);
       if (r[2] === 'math') return renderMath(k);
+      if (r[2] === 'rocket') return window.HubRocket.render({ app, store, esc, confetti, TANK: ROCKET_TANK, spellHref: kk => subjectHref(kk, 'spelling') }, k);
       if (r[2] === 'phonics') return window.HubPhonics.render({ app, store, speech, esc, starRow, confetti }, k, r[3]);
       return renderKid(k);
     }
     renderHome();
   }
-  window.addEventListener('hashchange', () => { stopDrill(); if (route()[2] !== 'phonics') window.HubPhonics.stop(); render(); window.scrollTo(0, 0); });
+  window.addEventListener('hashchange', () => { stopDrill(); if (route()[2] !== 'phonics') window.HubPhonics.stop(); window.HubRocket.stop(); render(); window.scrollTo(0, 0); });
 
   /* ---------- help: How do I list + one guide per section (content in js/help.js) ---------- */
   function renderHelp(id) {
@@ -276,6 +277,7 @@
             <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">➗</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} pictures found</span></a>
             <a class="subj" style="--sc:${SUBJECTS.typing.color}" href="${subjectHref(k, 'typing')}"><span class="ic">⌨️</span><b>Typing</b><span>${(() => { const n = ((k.spellfall.typing || {}).unlocked || 0) + 1; return `${n} lesson${n === 1 ? '' : 's'} unlocked`; })()}</span></a>
             <a class="subj" style="--sc:${COLORS.orange}" href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=hidden"><span class="ic">🙈</span><b>Hidden words</b><span>Spell from memory</span></a>
+            <a class="subj" style="--sc:${COLORS.blue}" href="#/kid/${k.id}/rocket"><span class="ic">🚀</span><b>Rocket</b><span>${(k.rocket.fuel || 0) >= ROCKET_TANK ? 'Ready to launch!' : `Fuel ${k.rocket.fuel || 0} / ${ROCKET_TANK}`}${k.rocket.best ? ` · record ${k.rocket.best} m` : ''}</span></a>
             <a class="subj" style="--sc:${SUBJECTS.phonics.color}" href="#/kid/${k.id}/phonics"><span class="ic">🔤</span><b>Phonics</b><span>Sound Sort · Blend Builder · Magic-e</span></a>
           </div>
           ${meterHTML()}

@@ -6,6 +6,7 @@
   const VERSION = '0.9.0'; // shown in the footer; becomes 1.0.0 at the public release tag
   const FEEDBACK_EMAIL = 'spellfallsupport@gmail.com';
   const SCHEMA = 1;
+  const ROCKET_TANK = 25; // words spelled right to fill the Spell-a-Rocket tank
   const META_KEY = 'hub:meta';
   const SECRET_KEY = 'hub:secret';
   const OLD_SPELLFALL_KEY = 'spellfall.players.v1';
@@ -114,7 +115,7 @@
     return { id: k.id || uid('p'), name: k.name || 'Learner', grade: k.grade || '1st', avatar: k.avatar || '🚀', color: k.color || 'yellow',
       order: k.order ?? 0, createdAt: k.createdAt || Date.now(),
       spellfall: k.spellfall || {}, flashcards: { decks: [], ...(k.flashcards || {}) },
-      math: { skills: {}, best: {}, pics: 0, ...(k.math || {}) }, phonics: { best: {}, ...(k.phonics || {}) }, log: k.log || [] };
+      math: { skills: {}, best: {}, pics: 0, ...(k.math || {}) }, phonics: { best: {}, ...(k.phonics || {}) }, rocket: { fuel: 0, launches: 0, best: 0, ...(k.rocket || {}) }, log: k.log || [] };
   }
   /* Spellfall adapter: Spellfall keeps its own "player" shape; we store it under kid.spellfall */
   store.spellfallPlayers = function () { return this.kids().map(k => ({ ...clone(k.spellfall || {}), id: k.id, name: k.name, grade: k.grade, avatar: k.avatar, color: k.color, order: k.order, createdAt: k.createdAt })); };
@@ -133,6 +134,7 @@
         if (g && !k.log.some(e => e.src === 'spellfall' && e.gameAt === g.at)) {
           k.log = [{ at: Date.now(), date: today(), src: 'spellfall', gameAt: g.at, subject: g.mode === 'type' ? 'typing' : 'spelling', score: g.score, points: g.mode === 'type' ? 3 : Math.min(10, (g.words || 0)), detail: g.mode }, ...k.log].slice(0, 400);
           store.bumpMeter(g.mode === 'type' ? 3 : Math.min(10, g.words || 0));
+          if (g.mode !== 'type') k.rocket = { ...k.rocket, fuel: Math.min(ROCKET_TANK, ((k.rocket || {}).fuel || 0) + (g.words || 0)) }; // Spell-a-Rocket fuel
         }
       }
     }
@@ -219,5 +221,5 @@
     clear() { store.family.settings.pinHash = null; store.family.settings.pinSalt = null; store.save(); }
   };
 
-  window.Hub = { store, ai, speech, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_EMAIL };
+  window.Hub = { store, ai, speech, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_EMAIL, ROCKET_TANK };
 })();
