@@ -129,6 +129,7 @@ input,select,textarea{font:inherit}
 #scr-game{overflow:hidden;display:flex;flex-direction:column;background:#0A0F1E}
 .stage{position:relative;flex:1;min-height:0}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.fclue{position:absolute;top:78px;left:50%;transform:translateX(-50%);width:min(92%,640px);background:rgba(255,253,245,.96);color:#26303A;border-radius:16px;padding:12px 18px;font-size:clamp(18px,2.6vw,24px);font-weight:700;text-align:center;line-height:1.3;box-shadow:0 6px 18px rgba(0,0,0,.35);pointer-events:none;z-index:2}
 .hud{position:absolute;top:0;left:0;right:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:12px;padding:12px 16px;pointer-events:none;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.55);z-index:2}
 .hud .score{font-family:var(--f-display);font-weight:700;font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
 .hud .combo{display:inline-block;font-size:16px;font-weight:700;background:rgba(0,0,0,.3);border-radius:999px;padding:3px 12px;margin-top:6px;text-shadow:none}
@@ -395,6 +396,7 @@ table.games td,table.games th{padding:7px 8px;border-bottom:1px solid var(--chal
         <div class="hud-c" id="h-level">Level 1</div>
         <div class="hud-r"><div class="lives" id="h-lives"></div><button class="pbtn" id="h-pause" aria-label="Pause"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button></div>
       </div>
+      <div class="fclue" id="fclue" hidden></div>
       <div class="overlay" id="ov-count" hidden><div class="count" id="count">3</div><p class="count-tip" id="count-tip" hidden></p></div>
       <div class="overlay" id="ov-pause" hidden>
         <div class="pausebox">
@@ -444,6 +446,7 @@ table.games td,table.games th{padding:7px 8px;border-bottom:1px solid var(--chal
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script src="../../js/core.js"></script>
+<script src="../../js/content.js"></script>
 <script>
 (() => {
 'use strict';
@@ -479,6 +482,18 @@ const MODES = {
   fade:{ label:'Show, then fade', short:'words fade', hint:'Spell the word from memory. Press return to check.', desc:'Each word shows for about 2 seconds, then turns into blanks. They spell it from memory.' },
   audio:{ label:'Listen only', short:'listen only', hint:'Listen, then spell it. Press return to check. ↑ says it again.', desc:'The word is read aloud and never shown, like a real spelling test. Uses the iPad’s voice.' }
 };
+/* Falling Facts: math problems or flashcard answers fall instead of spelling words (G.src). The engine
+   matches o.key (what to type) and draws o.word (what to show), so a fact shows "7 × 8" and matches "56". */
+const FACTS = {
+  math:{ label:'Math facts', hint:'Type the answer before it lands.' },
+  flash:{ label:'Flashcards', hint:'Read the clue at the top. Type the missing word before it lands.' }
+};
+function mathSkills(p) { // only skills whose problems fit on a falling rock: short, no "=" or "?" in them
+  const C = window.HubContent; if (!C) return [];
+  return C.skillsFor(p.grade).filter(sk => { for (let i = 0; i < 6; i++) { const q = sk.gen().q; if (q.length > 14 || /[=?]|^Round/.test(q)) return false; } return true; });
+}
+function flashCards(p) { const k = HUB.store.kid(p.id); return ((k && k.flashcards.decks) || []).flatMap(d => d.cards).filter(c => c.a && c.q && c.a.length <= 24); }
+const factsReady = (p, m) => m === 'math' ? mathSkills(p).length > 0 : flashCards(p).length > 0;
 const FAILS = [3, 5, 10, 15, 20, 30, 0];
 const LOOKS = [[2, '2 sec'], [3, '3 sec'], [5, '5 sec'], [8, '8 sec'], [0, 'Until they’re ready']];
 const CLOUD = { space:['#5B6BD6', '#8E9BFF', '#B9A6F0', '#F2C94C', '#3C4A9E'], dino:['#E0673C', '#F29A4A', '#8A5A48', '#F6C66B', '#B8452A'], ocean:['#2A93B8', '#5CC7DB', '#1E6F9E', '#8FE0EA', '#3AA37A'] };
@@ -850,7 +865,7 @@ function sizeCanvas() {
   G.fs = clamp(W / 30, 24, 40) * (G.young ? 1.08 : 1) * (G.mode === 'type' && G.lesson && !G.lesson.words ? 1.25 : 1);
   if (G.theme) scene = THEMES[G.theme].build(W, H, GY, DPR);
 }
-const startY = () => G.fs * .7;
+const startY = () => G.src === 'flash' && G.clueY ? G.clueY : G.fs * .7; // flashcard rocks start below the clue card
 const endY = () => GY - G.fs * .5;
 const objX = o => o.x * W + (G.theme === 'ocean' ? Math.sin(G.clock * 1.6 + o.seed) * 8 : 0);
 const objY = o => startY() + o.p * (endY() - startY());
@@ -860,8 +875,8 @@ const lowestObj = () => G.objs.reduce((a, b) => (!a || b.p > a.p ? b : a), null)
 function startGame(opts = {}) {
   const p = cur(); if (!p) return;
   if (G.state === 'play' || G.state === 'countdown' || G.state === 'paused' || G.state === 'over') return;
-  const mode = opts.mode || (p.mode === 'type' || p.mode === 'hidden' ? p.mode : 'spell');
-  if (mode !== 'type' && !(p.list && p.list.words && p.list.words.length)) return;
+  const mode = opts.mode || (['type', 'hidden', 'math', 'flash'].includes(p.mode) ? p.mode : 'spell');
+  if (FACTS[mode] ? !factsReady(p, mode) : mode !== 'type' && !(p.list && p.list.words && p.list.words.length)) return;
   const s = settingsOf(p), ty = typingOf(p);
   const lidx = mode === 'type' ? clamp(opts.lidx ?? ty.sel ?? ty.unlocked, 0, ty.unlocked) : 0;
   const lesson = mode === 'type' ? LESSONS[lidx] : null;
@@ -870,8 +885,8 @@ function startGame(opts = {}) {
   inp.value = ''; try { inp.focus({ preventScroll:true }); } catch { inp.focus(); }
   P.length = 0;
   Object.assign(G, {
-    state:'countdown', p, s, pid:p.id, mode, lesson, lidx, vmode: lesson ? 'visible' : s.mode,
-    theme:THEMES[p.theme] ? p.theme : 'space', words: lesson ? [] : p.list.words.slice(), listId: lesson ? null : p.list.id,
+    state:'countdown', p, s, pid:p.id, mode: FACTS[mode] ? 'spell' : mode, src: FACTS[mode] ? mode : null, ans:{}, cards:{}, missedItems:[], lesson, lidx, vmode: lesson || FACTS[mode] ? 'visible' : s.mode,
+    theme:THEMES[p.theme] ? p.theme : 'space', words: lesson || FACTS[mode] ? [] : p.list.words.slice(), listId: lesson || FACTS[mode] ? null : p.list.id,
     objs:[], floats:[], banner:null, t:0, score:0, level:1, spelled:0, fails:0, done:0, spawned:0, total: lesson ? lessonTotal(lesson) : Infinity,
     streak:0, bestStreak:0, typed:'', typedRaw:'', prevLen:0, target:null, completed:false,
     bag:[], spawnIn:.2, shake:0, ss:{}, tk:{ correct:0, wrong:0, missed:0, keys:{} }, count:3, countT:0, young:gradeNum(p.grade) <= 2, nid:0, finished:false, overT:0, wrongTries:0,
@@ -882,7 +897,8 @@ function startGame(opts = {}) {
   const kb = $('#kbd');
   if (G.guide) { buildGuide(lesson); kb.hidden = false; } else { kb.hidden = true; kb.innerHTML = ''; }
   sizeCanvas();
-  $('#hint').textContent = lesson ? (lesson.words ? 'Type each word before it lands. Spaces count too.' : 'Type each key before it lands. Keep your fingers on the home row.') : MODES[s.mode].hint;
+  $('#hint').textContent = lesson ? (lesson.words ? 'Type each word before it lands. Spaces count too.' : 'Type each key before it lands. Keep your fingers on the home row.') : G.src ? FACTS[G.src].hint : MODES[s.mode].hint;
+  $('#fclue').hidden = true;
   $('#tray-who').textContent = p.avatar || '';
   const tip = $('#count-tip'); tip.hidden = !lesson; tip.textContent = lesson ? `${lesson.name}: ${lesson.tip}` : '';
   updateHud();
@@ -1119,13 +1135,14 @@ function updateCount(dt) {
 }
 function fallTime(word) {
   const s = G.s, base = SPEEDS[s.speed] ? SPEEDS[s.speed].T : 15, r = RAMPS[s.ramp] ? RAMPS[s.ramp].r : .92;
+  if (G.src) return Math.max(base * .5, base * Math.pow(r, G.level - 1)) * (G.src === 'flash' ? 1.5 : 1);
   if (G.mode === 'type') { const b = TSPEED[s.speed] || 7.5, n = [...word].length; let t = Math.max(b * .5, b * Math.pow(r, G.level - 1)); if (n > 1) t *= clamp(.6 + .12 * n, 1, 2.4); return t; }
   let T = Math.max(base * .4, base * Math.pow(r, G.level - 1));
   T *= clamp(.8 + .06 * key(word).length, .9, 1.5);
   if (G.vmode !== 'visible') T *= 1.15;
   return T;
 }
-function maxOnScreen() { const L = G.level, m = G.vmode; if (G.mode === 'type') return G.lesson.words ? Math.min(4, 2 + Math.floor((L - 1) / 2)) : Math.min(6, 3 + Math.floor((L - 1) / 2)); if (m === 'audio') return L >= 6 ? 2 : 1; if (m === 'fade') return Math.min(3, 1 + Math.floor((L + 1) / 3)); return Math.min(5, 2 + Math.floor((L - 1) / 2)); }
+function maxOnScreen() { const L = G.level, m = G.vmode; if (G.src === 'flash') return 1; if (G.mode === 'type') return G.lesson.words ? Math.min(4, 2 + Math.floor((L - 1) / 2)) : Math.min(6, 3 + Math.floor((L - 1) / 2)); if (m === 'audio') return L >= 6 ? 2 : 1; if (m === 'fade') return Math.min(3, 1 + Math.floor((L + 1) / 3)); return Math.min(5, 2 + Math.floor((L - 1) / 2)); }
 function spawnGap() { if (G.mode === 'type') { const b = (TSPEED[G.s.speed] || 7.5) * Math.max(.5, Math.pow(RAMPS[G.s.ramp] ? RAMPS[G.s.ramp].r : .92, G.level - 1)); return b * (G.lesson.words ? .5 : .3); }
   const s = G.s, base = (SPEEDS[s.speed] ? SPEEDS[s.speed].T : 15) * Math.max(.4, Math.pow(RAMPS[s.ramp] ? RAMPS[s.ramp].r : .92, G.level - 1)); return base * (G.vmode === 'visible' ? .42 : .6); }
 function buildBag() {
@@ -1144,25 +1161,50 @@ function buildBagType() {
   pool.push(...rv.filter(c => ks[c] && (ks[c].oops + ks[c].miss * 2) / (ks[c].hit + 2) > .25).slice(0, 3));
   return shuffle(pool);
 }
-const makeBag = () => G.mode === 'type' ? buildBagType() : buildBag();
+function buildBagFacts() {
+  if (G.src === 'math') {
+    const sk = mathSkills(G.p), out = [];
+    for (let i = 0; i < 12; i++) { const pr = sk[Math.floor(Math.random() * sk.length)].gen(); G.ans[pr.q] = String(pr.a); out.push(pr.q); }
+    return out;
+  }
+  const cards = flashCards(G.p), due = cards.filter(c => (c.box || 0) < 2);
+  return shuffle((due.length >= 4 ? due : cards).map(c => { G.cards[c.id] = c; return c.id; }));
+}
+function itemInfo(item) { // bag item -> what the rock shows (word) and what the kid types (key)
+  if (G.src === 'math') return { word:item, key:key(G.ans[item]) };
+  if (G.src === 'flash') { const c = G.cards[item]; return { word:c.a, key:key(c.a), card:c }; }
+  return { word:item, key:ikey(item) };
+}
+function factLabel(o) {
+  const n = o === G.target && G.typed ? [...G.typed].length : 0;
+  if (G.src === 'math') return `${o.word} = ${n ? G.typed : '?'}`;
+  return [...o.word].map((c, i) => c === ' ' ? ' ' : i < n ? c : '_').join(' ');
+}
+function factSpawned(o) {
+  if (G.src === 'flash') { G.clue = o.card; const el = $('#fclue'); el.textContent = o.card.q.replace(/_{2,}/g, '_____'); el.hidden = false; G.clueY = el.offsetTop + el.offsetHeight + G.fs * .9; if (G.s.speak || G.young) Speech.say(o.card.q.replace(/_{2,}/g, ' blank '), { rate:.85 }); }
+  else if (G.s.speak) Speech.say(o.word.replace(/×/g, 'times').replace(/÷/g, 'divided by').replace(/−/g, 'minus').replace(/²/g, ' squared'), { rate:.9 });
+}
+const makeBag = () => G.src ? buildBagFacts() : G.mode === 'type' ? buildBagType() : buildBag();
 function nextWord() {
   const onScreen = new Set(G.objs.map(o => o.key));
   if (!G.bag.length) G.bag = makeBag();
-  let i = G.bag.findIndex(w => !onScreen.has(ikey(w)));
-  if (i < 0 && G.mode !== 'type') { G.bag = G.bag.concat(makeBag()); i = G.bag.findIndex(w => !onScreen.has(ikey(w))); }
+  let i = G.bag.findIndex(w => !onScreen.has(itemInfo(w).key));
+  if (i < 0 && G.mode !== 'type') { G.bag = G.bag.concat(makeBag()); i = G.bag.findIndex(w => !onScreen.has(itemInfo(w).key)); }
   if (i < 0) i = 0;
   return G.bag.splice(i, 1)[0];
 }
 function spawn() {
-  const word = nextWord(); if (!word) return;
+  const item = nextWord(); if (!item) return;
+  const info = itemInfo(item), word = info.word;
   const fs = G.fs; ctx.font = `700 ${fs}px ${FONT}`;
-  const half = ctx.measureText(word).width / 2 + fs * .5 + 10;
+  const half = ctx.measureText(G.src === 'math' ? word + ' = 000' : G.src === 'flash' ? word.replace(/./g, '_ ') : word).width / 2 + fs * .5 + 10;
   const lo = half + 8, hi = Math.max(lo + 1, W - half - 8);
   let best = (lo + hi) / 2, bestD = -1;
   for (let i = 0; i < 12; i++) { const x = rand(lo, hi); const near = G.objs.filter(o => o.p < .5).map(o => Math.abs(o.x * W - x)); const d = near.length ? Math.min(...near) : 9999; if (d > bestD) { bestD = d; best = x; } }
-  const o = { id:++G.nid, word, key:ikey(word), x:best / W, p:0, T:fallTime(word), seed:Math.random() * 10, spin:rand(-.8, .8), shape:rockShape(), cracks:[rand(0, 6.28), rand(0, 6.28), rand(0, 6.28)], born:G.t, peekUntil:0 };
+  const o = { id:++G.nid, word, key:info.key, card:info.card, x:best / W, p:0, T:fallTime(word), seed:Math.random() * 10, spin:rand(-.8, .8), shape:rockShape(), cracks:[rand(0, 6.28), rand(0, 6.28), rand(0, 6.28)], born:G.t, peekUntil:0 };
   G.objs.push(o); G.spawned++;
-  if (G.mode === 'type' ? (G.s.speak && /[a-z]{3}/i.test(word)) : (G.vmode !== 'visible' || G.s.speak)) Speech.say(word, { rate:G.young ? .8 : .9 });
+  if (G.src) factSpawned(o);
+  else if (G.mode === 'type' ? (G.s.speak && /[a-z]{3}/i.test(word)) : (G.vmode !== 'visible' || G.s.speak)) Speech.say(word, { rate:G.young ? .8 : .9 });
 }
 function update(dt) {
   G.t += dt; G.spawnIn -= dt;
@@ -1188,7 +1230,7 @@ function flashBad() { inp.classList.remove('bad'); void inp.offsetWidth; inp.cla
 
 function pop(o) {
   const x = objX(o), y = objY(o), r = G.fs * .95;
-  G.objs.splice(G.objs.indexOf(o), 1);
+  G.objs.splice(G.objs.indexOf(o), 1); if (G.src === 'flash') $('#fclue').hidden = true;
   G.spelled++; G.done++; G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak);
   const mult = G.streak >= 20 ? 4 : G.streak >= 10 ? 3 : G.streak >= 5 ? 2 : 1;
   const base = 10 * Math.max(1, o.key.replace(/[^a-z]/g, '').length), bonus = Math.round(base * .5 * (1 - o.p)), pts = (base + bonus) * mult;
@@ -1196,14 +1238,15 @@ function pop(o) {
   THEMES[G.theme].pop(x, y, r); Sfx.pop(G.streak);
   G.floats.push({ text:'+' + pts + (mult > 1 ? `  ×${mult}` : ''), x, y:y - r, life:0, max:1, color:'#FFF6C8', size:G.fs * .8 });
   clearTyped();
-  if (G.spelled % (G.mode === 'type' && !G.lesson.words ? 10 : 5) === 0) { G.level++; G.banner = { text:'Level ' + G.level, sub:G.mode === 'type' ? 'Keys fall a bit faster' : 'Words fall a bit faster', life:0, max:1.8 }; Sfx.level(); }
+  if (G.spelled % (G.mode === 'type' && !G.lesson.words ? 10 : 5) === 0) { G.level++; G.banner = { text:'Level ' + G.level, sub:G.mode === 'type' ? 'Keys fall a bit faster' : G.src ? 'A bit faster now' : 'Words fall a bit faster', life:0, max:1.8 }; Sfx.level(); }
   updateHud();
 }
 function fail(o) {
   const x = objX(o);
   if (G.mode === 'type') { const d = (G.target === o && G.typed && o.key.startsWith(G.typed)) ? [...G.typed].length : 0; const rest = [...o.key].slice(d); G.tk.missed += rest.length; rest.forEach(c => kstat(c, 'miss')); }
   G.done++;
-  G.objs.splice(G.objs.indexOf(o), 1);
+  G.objs.splice(G.objs.indexOf(o), 1); if (G.src === 'flash') $('#fclue').hidden = true;
+  if (G.src) G.missedItems.push(G.src === 'math' ? `${o.word} = ${G.ans[o.word]}` : o.word);
   G.fails++; G.streak = 0; stat(o.key, 'miss');
   THEMES[G.theme].miss(x, GY); Sfx.miss(); if (!RM) G.shake = .35;
   ctx.font = `700 ${G.fs * .9}px ${FONT}`;
@@ -1339,11 +1382,11 @@ function draw() {
 function drawLabel(o) {
   const fs = G.fs, x = objX(o), y = objY(o) + fs * .12, mode = G.vmode;
   ctx.font = `700 ${fs}px ${FONT}`;
-  const chars = [...o.word], widths = chars.map(c => ctx.measureText(c).width), tw = widths.reduce((a, b) => a + b, 0);
+  const chars = [...(G.src ? factLabel(o) : o.word)], widths = chars.map(c => ctx.measureText(c).width), tw = widths.reduce((a, b) => a + b, 0);
   let hidden = 0;
   if (mode === 'audio') hidden = 1;
   else if (mode === 'fade') hidden = clamp((G.t - o.born - 2.2) / .6, 0, 1);
-  if (o.peekUntil > G.t) hidden = 0;
+  if (o.peekUntil > G.t || G.src) hidden = 0;
   const spk = mode === 'audio' ? fs * 1.05 : 0, padX = fs * .42, h = fs * 1.38, w = tw + padX * 2 + spk, bx = x - w / 2, by = y - h / 2;
   o.box = { x:bx, y:by, w, h };
   const isT = o === G.target;
@@ -1353,7 +1396,7 @@ function drawLabel(o) {
   ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   if (isT) { ctx.lineWidth = 4; ctx.strokeStyle = '#F2B81F'; ctx.stroke(); }
   else if (o.p > .78) { ctx.lineWidth = 3; ctx.strokeStyle = `rgba(216,67,75,${.55 + .45 * Math.sin(G.clock * 10)})`; ctx.stroke(); }
-  const typedLen = (mode === 'visible' && G.typed && o.key.startsWith(G.typed)) ? [...G.typed].length : 0;
+  const typedLen = (mode === 'visible' && !G.src && G.typed && o.key.startsWith(G.typed)) ? [...G.typed].length : 0;
   const baseY = y + fs * .33;
   let cx = bx + padX + spk;
   ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
@@ -1415,6 +1458,7 @@ function finishGame(quit) {
   $('#kbd').hidden = true;
   if (G.mode === 'hidden') return finishHidden(quit);
   if (G.mode === 'type') return finishTyping(quit);
+  if (G.src) return finishFacts(quit);
   const base = S.players.find(p => p.id === G.pid);
   const played = G.spelled > 0 || G.fails > 0;
   let isBest = false;
@@ -1432,6 +1476,14 @@ function finishGame(quit) {
   const byKey = {}; G.words.forEach(w => { byKey[key(w)] = w; });
   const practice = Object.entries(G.ss).filter(([, v]) => v.miss || v.oops).sort((a, b) => (b[1].miss * 2 + b[1].oops) - (a[1].miss * 2 + a[1].oops)).slice(0, 8).map(([k, v]) => ({ word:byKey[k] || k, miss:v.miss, oops:v.oops }));
   S.lastResult = { pid:G.pid, name:(base && base.name) || 'speller', score:G.score, spelled:G.spelled, fails:G.fails, level:G.level, bestStreak:G.bestStreak, secs:G.t, isBest, practice, quit, played, young:G.young };
+  show('results');
+}
+function finishFacts(quit) { // math and flashcard rounds: own game record, no spelling stats, best score or fuel
+  $('#fclue').hidden = true;
+  const base = S.players.find(p => p.id === G.pid), played = G.spelled > 0 || G.fails > 0;
+  if (base && played) { const p = clone(base); p.games = [{ at:Date.now(), score:G.score, words:G.spelled, missed:G.fails, secs:Math.round(G.t), level:G.level, streak:G.bestStreak, mode:G.src }, ...(p.games || [])].slice(0, 30); Store.save(p, { now:true }); }
+  const practice = [...new Set(G.missedItems)].slice(0, 8).map(w => ({ word:w }));
+  S.lastResult = { pid:G.pid, name:(base && base.name) || 'friend', score:G.score, spelled:G.spelled, fails:G.fails, level:G.level, bestStreak:G.bestStreak, secs:G.t, isBest:false, practice, quit, played, young:G.young, facts:G.src };
   show('results');
 }
 function finishTyping(quit) {
@@ -1479,7 +1531,7 @@ function onData() {
     if (p) {
       S.pid = p.id;
       const m = QS.get('mode');
-      if (m && ['spell', 'hidden', 'type'].includes(m) && p.mode !== m) { const q = clone(p); q.mode = m; Store.save(q); }
+      if (m && ['spell', 'hidden', 'type', 'math', 'flash'].includes(m) && p.mode !== m) { const q = clone(p); q.mode = m; Store.save(q); }
       return show('lobby');
     }
     location.replace(hubHref('#/')); return;
@@ -1537,15 +1589,29 @@ function createFromSetup() {
 
 function renderLobby() {
   const p = cur(); if (!p) return show('home');
-  const s = settingsOf(p), pc = COLORS[p.color] || COLORS.yellow, mode = ['type', 'hidden'].includes(p.mode) ? p.mode : 'spell';
+  const s = settingsOf(p), pc = COLORS[p.color] || COLORS.yellow, mode = ['type', 'hidden', 'math', 'flash'].includes(p.mode) ? p.mode : 'spell';
   $('#scr-lobby').style.setProperty('--pc', pc);
   $('#l-av').textContent = p.avatar || '🙂'; $('#l-name').textContent = p.name;
   $('#l-sub').textContent = `${gradeLabel(p.grade)} · Best ${fmt(p.best || 0)}`;
-  $('#l-modes').innerHTML = [['spell', 'Falling words'], ['hidden', 'Hidden words'], ['type', 'Typing practice']].map(([k, l]) => `<button data-act="mode" data-val="${k}" aria-pressed="${mode === k}">${l}</button>`).join('');
+  $('#l-modes').innerHTML = [['spell', 'Falling words'], ['hidden', 'Hidden words'], ['type', 'Typing practice'], ['math', 'Math facts'], ['flash', 'Flashcards']].map(([k, l]) => `<button data-act="mode" data-val="${k}" aria-pressed="${mode === k}">${l}</button>`).join('');
   const th = p.theme || 'space';
   $('#l-themes').innerHTML = Object.entries(THEMES).map(([k, t]) => `<button class="tcard" data-act="theme" data-val="${k}" aria-pressed="${th === k}"><canvas data-theme="${k}" aria-hidden="true"></canvas><b>${t.label}</b><span>${t.blurb}</span></button>`).join('');
   requestAnimationFrame(() => $$('#l-themes canvas').forEach(c => renderPreview(c, c.dataset.theme)));
   $('#l-words').hidden = mode === 'type'; $('#l-lessons').hidden = mode !== 'type';
+  $('#l-words h3').textContent = FACTS[mode] ? FACTS[mode].label : 'This week’s words';
+  if (FACTS[mode]) {
+    const ok = factsReady(p, mode), cards = mode === 'flash' ? flashCards(p) : [];
+    $('#l-paper').innerHTML = !ok
+      ? (mode === 'math' ? `<div class="paper-empty"><p>No falling math for this grade yet.</p></div>` : `<div class="paper-empty"><p>No flashcards yet.</p><p class="fine">Ask a grown-up to make a deck in Parents → Flashcards.</p></div>`)
+      : mode === 'math'
+        ? `<div class="paper-title"><span>${esc(gradeLabel(p.grade))}</span><span>mixed</span></div><div class="lines" style="grid-template-columns:1fr">${mathSkills(p).map(sk => `<div class="line sm" style="font-size:24px"><span>${esc(sk.label)}</span></div>`).join('')}</div>`
+        : `<div class="paper-title"><span>Answers to know</span><span>${cards.length} cards</span></div><div class="lines">${cards.slice(0, 12).map(c => `<div class="line"><span>${esc(c.a)}</span></div>`).join('')}</div>`;
+    $('#play').disabled = !ok;
+    $('#l-summary').textContent = (mode === 'math' ? 'Problems fall · type the answer' : 'A clue shows at the top · its answer falls · type it') + ` · ${s.maxFails ? s.maxFails + ' misses allowed' : 'no miss limit'}`;
+    const last = (p.games || []).find(g => g.mode === mode);
+    $('#l-last').textContent = last ? `Last game: ${fmt(last.score)} points, ${last.words} right.` : 'No games yet. Press Play or hit return.';
+    return;
+  }
   if (mode !== 'type') {
     const L = p.list;
     $('#l-paper').innerHTML = L && L.words.length
@@ -1554,7 +1620,7 @@ function renderLobby() {
     $('#play').disabled = !(L && L.words.length);
     const lk = LOOKS.find(x => x[0] === s.look);
     $('#l-summary').textContent = mode === 'hidden' ? `${s.look ? (lk ? lk[1] : s.look + ' sec') + ' to look' : 'Look as long as you need'} · then the word hides · type it or say the letters` : `${s.maxFails ? s.maxFails + ' misses allowed' : 'No miss limit'} · ${SPEEDS[s.speed].label} speed · ${MODES[s.mode].short}`;
-    const last = (p.games || []).find(g => mode === 'hidden' ? g.mode === 'hidden' : (g.mode !== 'type' && g.mode !== 'hidden'));
+    const last = (p.games || []).find(g => mode === 'hidden' ? g.mode === 'hidden' : !['type', 'hidden', 'math', 'flash'].includes(g.mode));
     $('#l-last').textContent = last ? (mode === 'hidden' ? `Last time: ${last.words} of ${last.total} on the first try.` : `Last game: ${fmt(last.score)} points, ${last.words} words spelled.`) : 'No games yet. Press Play or hit return.';
   } else {
     const ty = typingOf(p), sel = clamp(ty.sel ?? ty.unlocked, 0, ty.unlocked), L = LESSONS[sel];
@@ -1592,7 +1658,7 @@ function renderResults() {
   const confetti = () => { if (RM) return; const cols = Object.values(COLORS); cf.innerHTML = Array.from({ length: 60 }, (_, i) => `<i style="left:${rand(0, 100).toFixed(1)}%;background:${cols[i % cols.length]};animation-delay:${rand(0, .8).toFixed(2)}s;transform:rotate(${rand(0, 180).toFixed(0)}deg)"></i>`).join(''); };
   const statsHtml = rows => rows.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
   $('#r-stars').hidden = !(r.type || r.hidden);
-  const rk = !r.type && HUB.store.kid(r.pid), got = rk ? (r.hidden ? r.first : r.spelled) || 0 : 0, rkEl = $('#r-rocket'); // Spell-a-Rocket fuel from this round
+  const rk = !r.type && !r.facts && HUB.store.kid(r.pid), got = rk ? (r.hidden ? r.first : r.spelled) || 0 : 0, rkEl = $('#r-rocket'); // Spell-a-Rocket fuel from this round
   rkEl.hidden = !got;
   if (got) { const f = Math.min(HUB.ROCKET_TANK, rk.rocket.fuel || 0); rkEl.textContent = f >= HUB.ROCKET_TANK ? `🚀 +${got} fuel · tank full! Launch your rocket from your page.` : `🚀 +${got} fuel · rocket tank ${f} / ${HUB.ROCKET_TANK}`; }
   if (r.hidden) {
@@ -1620,15 +1686,15 @@ function renderResults() {
     $('#r-again').textContent = r.stars && r.nextIdx !== r.lidx ? 'Next lesson' : 'Try again';
     if (r.stars) { Sfx.cheer(); confetti(); }
   } else {
-    const cheers = ['Nice run', 'Great spelling', 'Way to go', 'Super spelling'];
+    const cheers = r.facts ? ['Nice work', 'Sharp thinking', 'Way to go', 'Super job'] : ['Nice run', 'Great spelling', 'Way to go', 'Super spelling'];
     $('#r-title').textContent = r.isBest ? `New best, ${r.name}!` : `${cheers[r.score % cheers.length]}, ${r.name}!`;
     $('#r-score').textContent = fmt(r.score);
     $('#r-sub').textContent = 'points';
     $('#r-best').hidden = !r.isBest;
-    $('#r-stats').innerHTML = statsHtml([[r.spelled, 'words spelled'], [r.bestStreak, 'best streak'], [r.level, 'level reached'], [fmtTime(r.secs), 'time']]);
+    $('#r-stats').innerHTML = statsHtml([[r.spelled, r.facts === 'math' ? 'answers right' : r.facts ? 'cards right' : 'words spelled'], [r.bestStreak, 'best streak'], [r.level, 'level reached'], [fmtTime(r.secs), 'time']]);
     $('#r-practice').innerHTML = r.practice.length
       ? `<div class="paper-title"><span>Practice these</span><span>tap to hear</span></div><div class="lines">${r.practice.map(x => `<button class="line sm" data-act="say" data-w="${esc(x.word)}" aria-label="Hear ${esc(x.word)}"><span>${esc(x.word)}</span></button>`).join('')}</div>`
-      : `<div class="paper-empty"><p>${r.played ? 'Every word spelled right!' : 'No words this round.'}</p><p class="fine">${r.played ? 'No misses this round. Try a faster speed next time?' : 'Press Play again when you’re ready.'}</p></div>`;
+      : `<div class="paper-empty"><p>${r.played ? (r.facts ? 'Every answer right!' : 'Every word spelled right!') : 'No words this round.'}</p><p class="fine">${r.played ? 'No misses this round. Try a faster speed next time?' : 'Press Play again when you’re ready.'}</p></div>`;
     $('#r-again').textContent = 'Play again';
     if (r.isBest) { Sfx.cheer(); confetti(); }
   }
@@ -1720,7 +1786,7 @@ function progressCard(p) {
   return `<section class="card"><h3>Progress</h3>
     <div class="kpis"><div><b>${fmt(p.best || 0)}</b><span>Best spelling score</span></div><div><b>${fmt((p.totals || {}).games || 0)}</b><span>Games</span></div><div><b>${fmt((p.totals || {}).words || 0)}</b><span>Words spelled</span></div></div>
     ${tr.length ? `<div class="field"><span class="lbl">Tricky words this week</span><ul class="tricky">${tr.map(t => `<li><b>${esc(t.word)}</b><span>${t.miss} missed · ${t.oops} wrong tries · ${t.hit} spelled</span></li>`).join('')}</ul></div>` : ''}
-    ${games.length ? `<div class="field"><span class="lbl">Recent games</span><div class="tablewrap"><table class="games"><thead><tr><th>When</th><th>Game</th><th>Score</th><th>Right</th><th>Misses</th></tr></thead><tbody>${games.slice(0, 8).map(g => `<tr><td>${fmtWhen(g.at)}</td><td>${g.mode === 'type' ? `Typing: ${esc((LESSONS.find(l => l.id === g.lesson) || {}).name || '')}${g.acc != null ? ` (${g.acc}%)` : ''}` : g.mode === 'hidden' ? `Hidden words (${g.words}/${g.total} first try)` : 'Falling words'}</td><td>${fmt(g.score)}</td><td>${g.words}</td><td>${g.missed}</td></tr>`).join('')}</tbody></table></div></div>` : '<p class="fine">No games yet.</p>'}
+    ${games.length ? `<div class="field"><span class="lbl">Recent games</span><div class="tablewrap"><table class="games"><thead><tr><th>When</th><th>Game</th><th>Score</th><th>Right</th><th>Misses</th></tr></thead><tbody>${games.slice(0, 8).map(g => `<tr><td>${fmtWhen(g.at)}</td><td>${g.mode === 'type' ? `Typing: ${esc((LESSONS.find(l => l.id === g.lesson) || {}).name || '')}${g.acc != null ? ` (${g.acc}%)` : ''}` : g.mode === 'hidden' ? `Hidden words (${g.words}/${g.total} first try)` : g.mode === 'math' ? 'Falling math facts' : g.mode === 'flash' ? 'Falling flashcards' : 'Falling words'}</td><td>${fmt(g.score)}</td><td>${g.words}</td><td>${g.missed}</td></tr>`).join('')}</tbody></table></div></div>` : '<p class="fine">No games yet.</p>'}
   </section>`;
 }
 function pastCard(p) {

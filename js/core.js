@@ -132,9 +132,9 @@
       if (games.length > before || (games[0] && games[0].at > ((k.log.find(e => e.src === 'spellfall') || {}).at || 0))) {
         const g = games[0];
         if (g && !k.log.some(e => e.src === 'spellfall' && e.gameAt === g.at)) {
-          k.log = [{ at: Date.now(), date: today(), src: 'spellfall', gameAt: g.at, subject: g.mode === 'type' ? 'typing' : 'spelling', score: g.score, points: g.mode === 'type' ? 3 : Math.min(10, (g.words || 0)), detail: g.mode }, ...k.log].slice(0, 400);
+          k.log = [{ at: Date.now(), date: today(), src: 'spellfall', gameAt: g.at, subject: g.mode === 'type' ? 'typing' : g.mode === 'math' ? 'math' : g.mode === 'flash' ? 'flashcards' : 'spelling', score: g.score, points: g.mode === 'type' ? 3 : Math.min(10, (g.words || 0)), detail: g.mode }, ...k.log].slice(0, 400);
           store.bumpMeter(g.mode === 'type' ? 3 : Math.min(10, g.words || 0));
-          if (g.mode !== 'type') k.rocket = { ...k.rocket, fuel: Math.min(ROCKET_TANK, ((k.rocket || {}).fuel || 0) + (g.words || 0)) }; // Spell-a-Rocket fuel
+          if (!['type', 'math', 'flash'].includes(g.mode)) k.rocket = { ...k.rocket, fuel: Math.min(ROCKET_TANK, ((k.rocket || {}).fuel || 0) + (g.words || 0)) }; // Spell-a-Rocket fuel
         }
       }
     }

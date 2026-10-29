@@ -138,6 +138,7 @@
         <li><b>Parents → Flashcards</b>, choose the child, tap <b>Scan pages</b>. You can pick several photos for a multi-page quiz.</li>
         <li>Check every card. Answers Claude had to guess are flagged. Fix or remove any, then save.</li>
       </ol>
+      <p><b>Falling flashcards</b>: on the Flashcards screen tap <b>Falling flashcards</b>, or choose <b>Flashcards</b> in the spelling game. A clue shows at the top and its answer falls as blanks; your child types it before it lands. It’s for practice and doesn’t move cards up the tower.</p>
       <p>No scanning? Tap <b>Type cards</b> to make them by hand. Each deck can be edited, restarted from the Stones, or deleted.</p>` },
 
     { id: 'math', icon: '➗', title: 'Math facts', sub: '20-problem drills with a hidden picture', body: `
@@ -148,6 +149,7 @@
         <li>All 20 right on the first try reveals the whole picture and adds to their pictures found.</li>
         <li><b>Read it to me</b> reads the problem aloud.</li>
       </ul>
+      <p><b>Falling Facts</b>: tap <b>Falling Facts</b> on the Math screen, or choose <b>Math facts</b> in the spelling game. Problems for your child’s grade fall from the sky and they type each answer before it lands. Same worlds, speed and miss settings as the spelling game.</p>
       <p class="fine">Skills change with the grade you set for each child, from adding to 10 in kindergarten to equations and slope in 8th grade. For negative answers (7th and 8th grade), type a minus sign first, like -3.</p>` },
 
     { id: 'goal', icon: '🏆', title: 'Family goal', sub: 'One shared weekly meter', body: `

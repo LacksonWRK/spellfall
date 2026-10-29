@@ -297,7 +297,7 @@
     app.innerHTML = `<div class="wrap narrow" style="--pc:${COLORS[k.color]}">
       <a class="btn ghost small back" href="#/kid/${k.id}">← ${esc(k.name)}</a>
       <h1 class="h1">Flashcards</h1>
-      ${all.length ? `<p class="muted">Climb the tower! Get a card right and it moves up. Stars are cards you know.</p>${towerHTML(all)}` : ''}
+      ${all.length ? `<p class="muted">Climb the tower! Get a card right and it moves up. Stars are cards you know.</p>${towerHTML(all)}<p class="fine">Or play <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=flash">☄️ Falling flashcards</a>: read the clue, type the answer before it lands.</p>` : ''}
       ${decks.length ? decks.map(d => {
         const left = d.cards.filter(c => (c.box || 0) < 2).length;
         return `<div class="deckrow"><div><b>${esc(d.title)}</b><small>${d.cards.length} cards · ${left ? `${left} still climbing` : 'all stars!'}${d.subject ? ' · ' + esc(d.subject) : ''}</small></div><a class="btn primary" href="#/kid/${k.id}/flashcards/${d.id}">${left ? 'Practice' : 'Review'}</a></div>`;
@@ -396,7 +396,7 @@
     app.innerHTML = `<div class="wrap narrow">
       <a class="btn ghost small back" href="#/kid/${k.id}">← ${esc(k.name)}</a>
       <h1 class="h1">Math facts</h1>
-      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture.</p>
+      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture. Or try <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=math">☄️ Falling Facts</a>: problems fall and you type the answer.</p>
       <div class="skills">${skills.map(s => { const b = k.math.best[s.id]; return `<button class="skill" data-act="m-skill" data-id="${s.id}" aria-pressed="${s.id === sel}"><b>${esc(s.label)}</b><span>${b ? `Best: ${b.right}/20 in ${b.secs}s` : 'New!'}</span></button>`; }).join('')}</div>
       <div class="row"><button class="btn primary big" data-act="m-go" ${sel ? '' : 'disabled'}>Start</button></div>
     </div>`;
