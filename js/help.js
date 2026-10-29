@@ -10,6 +10,7 @@
     ['Add another child', 'parents'],
     ['Change a child’s name, grade or picture', 'parents'],
     ['Set this week’s spelling words', 'lists'],
+    ['Print this week’s words and checklist', 'lists'],
     ['Scan the spelling list from school', 'lists'],
     ['Turn a quiz or study sheet into flashcards', 'flashcards'],
     ['Give a spelling test out loud', 'spelling'],
@@ -122,7 +123,9 @@
         <li><b>Parents → Spelling lists → Scan a school list</b>. That opens the game’s grown-ups page.</li>
         <li>Tap <b>Scan a photo</b> (or <b>Scan next week’s list</b>) and take a picture of the list.</li>
         <li>Check the words. Any that were hard to read are pointed out. Then save.</li>
-      </ol>` },
+      </ol>
+      <h3>Print the week</h3>
+      <p><b>Parents → Spelling lists → Print page</b> prints one child’s page: this week’s words on handwriting lines with two practice spaces each, and the Today checklist as a Monday–Friday grid for the fridge. <b>Parents → Today plan → Print weekly pages</b> prints a page for every child. On an iPad, choose your printer or <b>Save to Files</b> to keep a PDF.</p>` },
 
     { id: 'flashcards', icon: '🃏', title: 'Flashcards', sub: 'Climb the tower', body: `
       <p>Flashcards are fill-in-the-blank sentences. Cards climb a tower as your child learns them: <b>🪨 Stones</b> (new), <b>🪜 Stairs</b> (getting it), <b>⭐ Stars</b> (learned).</p>

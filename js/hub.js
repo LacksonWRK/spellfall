@@ -83,7 +83,7 @@
     if (!store.kids().length && r[0] !== 'parent' && r[0] !== 'setup') return renderSetup();
     if (r[0] === 'setup') return renderSetup();
     if (r[0] === 'welcome') return S.welcome ? renderWelcome() : go('#/');
-    if (r[0] === 'parent') return S.parentOK ? renderParent() : (go('#/'), null);
+    if (r[0] === 'parent') return !S.parentOK ? (go('#/'), null) : r[1] === 'print' ? renderPrint(r[2]) : renderParent();
     if (r[0] === 'kid') {
       const k = store.kid(r[1]); if (!k) return go('#/');
       if (r[2] === 'flashcards') return r[3] ? renderStudy(k, r[3]) : renderDecks(k);
@@ -122,6 +122,28 @@
         </section>
       </div>
     </div>`;
+  }
+
+  /* ---------- printable weekly page: one sheet per child (words on handwriting lines + Mon-Fri checklist) ---------- */
+  function renderPrint(which) {
+    const kids = which === 'all' ? store.kids() : [store.kid(which)].filter(Boolean);
+    const week = new Date(window.Hub.mondayOf() + 'T12:00'), plan = store.family.plan.template;
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    app.innerHTML = `<div class="wrap narrow no-print">
+        <div class="spread"><a class="btn ghost small" href="#/parent">← Parents</a><button class="btn primary" data-act="print-now">🖨 Print</button></div>
+        <p class="muted">One page per child. On an iPad, tap Print, then pick your printer or <b>Save to Files</b> as a PDF.</p>
+      </div>
+      ${kids.map(k => { const L = k.spellfall.list, words = L && L.words ? L.words : [];
+        return `<section class="pp">
+          <header class="pp-head"><div><b>${esc(k.name)}</b><span>${esc(gradeLabel(k.grade))}</span></div><div>Week of ${week.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div></header>
+          <h2>Spelling${L ? ` · ${esc(L.title)}` : ''}</h2>
+          ${words.length ? `<div class="pp-words">${words.map(w => `<div class="pp-row"><span class="pp-line pp-word">${esc(w)}</span><span class="pp-line"></span><span class="pp-line"></span></div>`).join('')}</div>`
+            : '<p class="pp-empty">No spelling list this week. Add one in Parents → Spelling lists.</p>'}
+          <h2>This week’s checklist</h2>
+          <table class="pp-check"><thead><tr><th></th>${days.map(d => `<th>${d}</th>`).join('')}</tr></thead>
+            <tbody>${plan.map(it => `<tr><td>${esc(it.label)}</td>${days.map(() => '<td><span class="pp-box"></span></td>').join('')}</tr>`).join('')}</tbody></table>
+          <footer class="pp-foot">Spellfall Homeschool</footer>
+        </section>`; }).join('')}`;
   }
 
   /* ---------- Add to Home Screen (iPad / iPhone) ----------
@@ -540,7 +562,7 @@
     const k = pk(); if (!k) return '';
     const L = k.spellfall.list, lists = C.listsFor(k.grade);
     return `${kidTabs()}<div class="cols">
-      <section class="card"><h2 class="h3">This week · ${esc(k.name)}</h2>
+      <section class="card"><div class="spread"><h2 class="h3">This week · ${esc(k.name)}</h2><a class="btn small ghost" href="#/parent/print/${k.id}">🖨 Print page</a></div>
         ${L && L.words ? `<div><b>${esc(L.title)}</b> <span class="fine" style="display:inline">· ${L.words.length} words</span></div><div class="wordchips">${L.words.map(w => `<span class="wchip">${esc(w)}</span>`).join('')}</div>` : '<p class="muted">No list yet.</p>'}
         <div class="field"><label class="lbl" for="sp-text">Type a list (one word per line)</label><textarea id="sp-text" class="inp" placeholder="cake&#10;lake&#10;because" autocapitalize="off" spellcheck="false"></textarea></div>
         <div class="row"><button class="btn primary small" data-act="sp-save">Save as this week’s list</button><a class="btn small ghost" href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&grown=1">${ai.available() ? '📷 Scan a school list' : 'More list options'}</a></div>
@@ -664,7 +686,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
 
   function pToday() {
     const p = store.family.plan;
-    return `<section class="card"><h2 class="h3">Daily checklist</h2>
+    return `<section class="card"><div class="spread"><h2 class="h3">Daily checklist</h2><a class="btn small ghost" href="#/parent/print/all">🖨 Print weekly pages</a></div>
       <p class="muted">Every child sees this list on their Today page. Items linked to a subject check themselves off when a session is finished. Others the child taps when done.</p>
       <div class="col" style="gap:10px">${p.template.map((it, i) => `<div class="two" style="grid-template-columns:minmax(0,1fr) 180px 42px;align-items:center">
         <input class="inp" data-plabel="${i}" value="${esc(it.label)}" maxlength="40" aria-label="Item ${i + 1}">
@@ -714,6 +736,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     switch (a) {
       case 's-av': { const r = setupRows[+el.dataset.i]; r.avatar = AVATARS[(AVATARS.indexOf(r.avatar) + 1) % AVATARS.length]; el.textContent = r.avatar; break; }
       case 's-add': { const ks = Object.keys(COLORS), i = setupRows.length; setupRows.push({ name: '', grade: '1st', avatar: AVATARS[(i * 3 + 2) % AVATARS.length], color: ks[i % ks.length] }); renderSetup(); break; }
+      case 'print-now': window.print(); break;
       case 'backup-later': store.family.settings.backupSnoozeUntil = Date.now() + 3 * 864e5; store.save(); render(); break;
       case 'install-later': store.family.settings.installSnoozeUntil = Date.now() + 7 * 864e5; store.save(); render(); break;
       case 's-del': setupRows.splice(+el.dataset.i, 1); renderSetup(); break;
