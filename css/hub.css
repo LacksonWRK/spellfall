@@ -57,6 +57,31 @@ a{color:var(--yellow)}
 .install .steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:2px}
 @media (max-width:560px){.install{flex-wrap:wrap;justify-content:space-between}.install img{width:48px;height:48px;border-radius:11px}.install .col{order:3;flex-basis:100%!important}}
 
+/* welcome steps */
+.stepper{list-style:none;margin:0;padding:0;display:flex;justify-content:center;gap:8px 18px;flex-wrap:wrap;font-size:15px;color:var(--chalk-dim)}
+.stepper li{display:flex;align-items:center;gap:8px}
+.stepper span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--chalk-faint);font-weight:700}
+.stepper li.on{color:var(--chalk);font-weight:700}
+.stepper li.on span{background:var(--yellow);border-color:var(--yellow);color:var(--on-yellow)}
+.stepper li.done span{background:var(--good);border-color:var(--good);color:#fff}
+.welcome-list{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+
+/* help */
+.howto{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.howto li{border-bottom:1px solid var(--chalk-faint)}
+.howto a{display:block;padding:11px 2px;color:var(--chalk);text-decoration:none;font-weight:700}
+.howto a::after{content:"\00a0→";color:var(--yellow)}
+.howto a:hover{color:var(--yellow)}
+.guides{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.gcard{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--panel);color:var(--chalk);text-decoration:none;min-width:0}
+.gcard:hover{background:var(--panel-2)}
+.gcard .ic{font-size:28px;flex:none}
+.gcard small{display:block;color:var(--chalk-dim);font-size:14px}
+.guide{gap:12px}
+.guide h3{font-family:var(--f-display);font-size:22px;margin:8px 0 0}
+.guide p,.guide li{max-width:64ch;margin:0}
+.guide ol,.guide ul{margin:0;padding-left:24px;display:flex;flex-direction:column;gap:6px}
+
 /* backup reminder */
 .nag{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:16px 20px;border-left:5px solid var(--orange);border-radius:10px;background:rgba(247,178,103,.10)}
 

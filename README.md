@@ -21,6 +21,8 @@ It's a plain static website, with no accounts, no server, and no build step. Eve
 | **Photo → spelling list** | Scan the weekly school list in Spellfall's grown-ups panel. |
 | **Built-in spelling lists** | Original grade-based lists for weeks without a school list (K–4), grouped by phonics pattern and spelling rule. Parents pick their curriculum in Settings; no publisher's lists are included. |
 | **Progress** | Days active, sessions, tricky flashcards, math pictures, and Spellfall's own score and tricky-word history. |
+| **Welcome** | Three steps for a new family: add kids, pick this week's words and curriculum, then practice the Parents button and set an optional PIN. |
+| **Help** | A How do I list and a short guide for every section, from the kid picker footer or Parents → Help. Content lives in `js/help.js`. |
 | **Parent PIN** | Press-and-hold, then a 4-digit PIN. It's a kid deterrent, not real security. |
 | **Backup / restore** | Download a JSON file, or restore from one. |
 
@@ -60,6 +62,8 @@ css/hub.css           chalkboard theme
 js/core.js            storage (versioned, one family per browser), AI client, speech, PIN
 js/content.js         built-in spelling lists and math skill generators by grade
 js/hub.js             screens: kids, Today, flashcards, math, parent mode
+js/help.js            parent help: How do I list + one guide per section
+privacy.html          plain-language privacy notice
 apps/spellfall/       the Spellfall game, reading kid profiles from the hub
 ```
 

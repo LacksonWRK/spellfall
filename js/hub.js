@@ -74,9 +74,12 @@
   function route() { return (location.hash || '#/').replace(/^#\/?/, '').split('/').filter(Boolean); }
   function render() {
     const r = route();
-    if (S.parentOK && r[0] !== 'parent') S.parentOK = false; // leaving parent mode locks it
+    if (r[0] === 'help') { if (S.lastRoute && S.lastRoute[0] !== 'help') S.helpFrom = '#/' + S.lastRoute.join('/'); S.lastRoute = r; return renderHelp(r[1]); }
+    S.lastRoute = r;
+    if (S.parentOK && r[0] !== 'parent') S.parentOK = false; // leaving parent mode locks it (help is the one exception)
     if (!store.kids().length && r[0] !== 'parent' && r[0] !== 'setup') return renderSetup();
     if (r[0] === 'setup') return renderSetup();
+    if (r[0] === 'welcome') return S.welcome ? renderWelcome() : go('#/');
     if (r[0] === 'parent') return S.parentOK ? renderParent() : (go('#/'), null);
     if (r[0] === 'kid') {
       const k = store.kid(r[1]); if (!k) return go('#/');
@@ -87,6 +90,33 @@
     renderHome();
   }
   window.addEventListener('hashchange', () => { stopDrill(); render(); window.scrollTo(0, 0); });
+
+  /* ---------- help: How do I list + one guide per section (content in js/help.js) ---------- */
+  function renderHelp(id) {
+    const H = window.HubHelp, t = id && H.TOPICS.find(x => x.id === id);
+    const back = `<a class="btn ghost small back" href="${t ? '#/help' : esc(S.helpFrom || '#/')}">← ${t ? 'All help' : 'Back'}</a>`;
+    if (t) {
+      const i = H.TOPICS.indexOf(t), prev = H.TOPICS[i - 1], next = H.TOPICS[i + 1];
+      app.innerHTML = `<div class="wrap narrow">${back}
+        <div class="me"><span class="av sm" style="--pc:var(--yellow)" aria-hidden="true">${t.icon}</span><div><h1 class="h1">${esc(t.title)}</h1><small>${esc(t.sub)}</small></div></div>
+        <article class="card guide">${t.body}</article>
+        <nav class="spread" aria-label="More guides">${prev ? `<a class="btn ghost small" href="#/help/${prev.id}">← ${esc(prev.title)}</a>` : '<span></span>'}${next ? `<a class="btn ghost small" href="#/help/${next.id}">${esc(next.title)} →</a>` : ''}</nav>
+      </div>`;
+      return;
+    }
+    app.innerHTML = `<div class="wrap">${back}
+      <h1 class="h1">Help</h1>
+      <div class="cols">
+        <section class="card"><h2 class="h3">How do I…</h2>
+          <ul class="howto">${H.HOWTO.map(([q, tid]) => `<li><a href="#/help/${tid}">${esc(q)}</a></li>`).join('')}</ul>
+        </section>
+        <section class="col" style="gap:14px"><h2 class="h3">Guides</h2>
+          <div class="guides">${H.TOPICS.map(x => `<a class="gcard" href="#/help/${x.id}"><span class="ic" aria-hidden="true">${x.icon}</span><span><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></span></a>`).join('')}</div>
+          <p class="fine"><a href="privacy.html">Privacy</a> · Spellfall Homeschool is not affiliated with any curriculum publisher.</p>
+        </section>
+      </div>
+    </div>`;
+  }
 
   /* ---------- Add to Home Screen (iPad / iPhone) ----------
      Safari can clear a site's saved data after a week without a visit; Home Screen apps keep it.
@@ -115,8 +145,9 @@
     app.innerHTML = `<div class="wrap narrow">
       <div class="logo">Spellfall<small>Homeschool</small></div>
       ${installHTML()}
+      ${stepsHTML(1)}
       <h1 class="h1 center">Who's learning?</h1>
-      <p class="muted center">Add each child. You can change these later in Parent settings.</p>
+      <p class="muted center">Add each child. You can change these later in Parent settings. New here? <a href="#/help/start">See how Spellfall works</a>.</p>
       <div class="col" id="srows">${setupRows.map((r, i) => `
         <div class="card" style="flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:12px">
           <button class="av sm" data-act="s-av" data-i="${i}" style="--pc:${COLORS[r.color]}" aria-label="Change picture">${r.avatar}</button>
@@ -125,8 +156,54 @@
           ${setupRows.length > 1 ? `<button class="x" data-act="s-del" data-i="${i}" aria-label="Remove">×</button>` : ''}
         </div>`).join('')}</div>
       <div class="row"><button class="btn ghost small" data-act="s-add">+ Add another child</button></div>
-      <div class="row"><button class="btn primary big" data-act="s-go">Let's learn</button></div>
+      <div class="row"><button class="btn primary big" data-act="s-go">Next</button></div>
       <p class="fine">Everything is saved on this device only. Make a backup now and then from Parent settings. <a href="privacy.html">Privacy</a></p>
+    </div>`;
+  }
+
+  /* ---------- welcome: steps 2 and 3 after the kids are added ---------- */
+  function stepsHTML(n) {
+    return `<ol class="stepper" aria-label="Setup, step ${n} of 3">${['Kids', 'Spelling words', 'Grown-up tools'].map((l, i) => `<li class="${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}" ${i + 1 === n ? 'aria-current="step"' : ''}><span>${i + 1 < n ? '✓' : i + 1}</span>${l}</li>`).join('')}</ol>`;
+  }
+  function renderWelcome() {
+    const w = S.welcome, kids = w.kidIds.map(id => store.kid(id)).filter(Boolean);
+    if (w.step === 2) {
+      app.innerHTML = `<div class="wrap narrow">
+        <div class="logo">Spellfall<small>Homeschool</small></div>
+        ${stepsHTML(2)}
+        <h1 class="h1 center">This week’s spelling words</h1>
+        <p class="muted center">Start with a built-in list for each child’s grade. When the school list comes home, type it or scan it in Parents → Spelling lists.</p>
+        ${kids.map(k => `<div class="card" style="flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:12px">
+          <span class="av sm" style="--pc:${COLORS[k.color]}">${esc(k.avatar)}</span>
+          <div class="field" style="flex:1;min-width:200px"><label class="lbl" for="wl-${k.id}">${esc(k.name)} · ${esc(gradeLabel(k.grade))}</label>
+            <select id="wl-${k.id}" class="inp" data-wlist="${k.id}">${C.listsFor(k.grade).map((l, i) => `<option value="${i}">${esc(l.title)} · ${esc(l.words.slice(0, 4).join(', '))}…</option>`).join('')}<option value="">No list yet, I’ll add our own</option></select></div>
+        </div>`).join('')}
+        <div class="card"><div class="field"><label class="lbl" for="w-curric">Our curriculum (optional)</label><select id="w-curric" class="inp" style="max-width:340px">${CURRICULA.map(([v, l]) => `<option value="${v}" ${v === (store.family.settings.curriculum || '') ? 'selected' : ''}>${l}</option>`).join('')}</select>
+          <small class="fine">Spellfall works alongside any curriculum. ${NOT_AFFILIATED}</small></div></div>
+        <div class="row" style="justify-content:space-between"><button class="btn ghost" data-act="w-skip">Skip setup</button><button class="btn primary big" data-act="w-lists">Next</button></div>
+      </div>`;
+      return;
+    }
+    app.innerHTML = `<div class="wrap narrow">
+      <div class="logo">Spellfall<small>Homeschool</small></div>
+      ${stepsHTML(3)}
+      <h1 class="h1 center">Grown-up tools</h1>
+      <section class="card"><h2 class="h3">1. The Parents button</h2>
+        <p class="muted">Lists, flashcards and settings live behind the <b>Parents</b> button. Press and hold it for about a second, until the ring fills. A quick tap won’t open it, which keeps little fingers out. Try it here:</p>
+        <div class="row"><button class="hold" data-hold="practice"><span class="ring"></span>Parents · press and hold</button><span class="ok" id="w-held" ${w.held ? '' : 'hidden'}>That’s it!</span></div>
+      </section>
+      <section class="card"><h2 class="h3">2. A PIN (optional)</h2>
+        <p class="muted">Adds a 4-digit PIN to the Parents button. It’s a speed bump for kids, not a lock, and there’s no reset, so pick one you’ll remember.</p>
+        ${pin.isSet() ? '<p class="ok">PIN set.</p>' : `<div class="row"><input id="w-pin" class="inp" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" aria-label="4-digit PIN" style="max-width:160px"><button class="btn small" data-act="w-pin">Set PIN</button></div>`}
+      </section>
+      <section class="card"><h2 class="h3">3. Good to know</h2>
+        <ul class="welcome-list">
+          <li>Everything saves on this device only. Make a backup now and then: Parents → Backup.</li>
+          <li>Photo scanning (turning a school list or quiz into words or flashcards) is optional and needs your own Anthropic key. <a href="#/help/scanning">How to set it up</a>.</li>
+          <li>Stuck? Tap <b>Help</b> at the bottom of the kids screen, or in Parents.</li>
+        </ul>
+      </section>
+      <div class="row" style="justify-content:center"><button class="btn primary big" data-act="w-done">Start learning</button></div>
     </div>`;
   }
 
@@ -161,7 +238,7 @@
       }).join('')}</div>
       ${meterHTML()}
       ${backupNagHTML()}
-      <div class="spread"><span class="fine">Saved on this device · <a href="privacy.html">Privacy</a></span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
+      <div class="spread"><span class="fine">Saved on this device · <a href="#/help">Help</a> · <a href="privacy.html">Privacy</a></span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
     </div>`;
   }
 
@@ -416,7 +493,7 @@
     pk();
     const body = { kids: pKids, spelling: pSpelling, flash: pFlash, today: pToday, settings: pSettings, backup: pBackup }[S.ptab] || pKids;
     app.innerHTML = `<div class="wrap">
-      <div class="spread"><h1 class="h1">Parents</h1><a class="btn primary small" href="#/">Done</a></div>
+      <div class="spread"><h1 class="h1">Parents</h1><div class="row"><a class="btn ghost small" href="#/help">❓ Help</a><a class="btn primary small" href="#/">Done</a></div></div>
       <div class="tabs" role="group" aria-label="Section">${PTABS.map(([id, l]) => `<button class="tab" data-act="p-tab" data-id="${id}" aria-pressed="${S.ptab === id}">${l}</button>`).join('')}</div>
       ${body()}
     </div>`;
@@ -632,7 +709,10 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
       case 'backup-later': store.family.settings.backupSnoozeUntil = Date.now() + 3 * 864e5; store.save(); render(); break;
       case 'install-later': store.family.settings.installSnoozeUntil = Date.now() + 7 * 864e5; store.save(); render(); break;
       case 's-del': setupRows.splice(+el.dataset.i, 1); renderSetup(); break;
-      case 's-go': { const rows = setupRows.filter(r => r.name.trim()); if (!rows.length) return toast('Type at least one name.'); rows.forEach(r => store.addKid(r.name.trim().slice(0, 20), r.grade, r.avatar, r.color)); setupRows = null; location.hash = '#/'; render(); toast('Ready! Grown-ups: press and hold Parents to add spelling lists.'); break; }
+      case 's-go': { const rows = setupRows.filter(r => r.name.trim()); if (!rows.length) return toast('Type at least one name.'); const ids = rows.map(r => store.addKid(r.name.trim().slice(0, 20), r.grade, r.avatar, r.color).id); setupRows = null; S.welcome = { step: 2, kidIds: ids }; go('#/welcome'); break; }
+      case 'w-lists': { $$('[data-wlist]').forEach(sel => { const k = store.kid(sel.dataset.wlist); if (!k || sel.value === '') return; const l = C.listsFor(k.grade)[+sel.value]; setSpellingList(k, l.title, l.words.slice()); }); store.family.settings.curriculum = $('#w-curric').value; store.save(); S.welcome.step = 3; renderWelcome(); window.scrollTo(0, 0); break; }
+      case 'w-pin': { const v = $('#w-pin').value; if (!/^\d{4}$/.test(v)) return toast('Use exactly 4 digits.'); pin.set(v).then(() => { renderWelcome(); toast('PIN saved.'); }); break; }
+      case 'w-skip': case 'w-done': { const n = S.welcome ? S.welcome.kidIds.length : 0; S.welcome = null; go('#/'); toast(a === 'w-done' ? `All set! ${n > 1 ? 'Each child taps their card' : 'Tap your child’s card'} to start.` : 'You can change anything later in Parents.'); break; }
       case 'tick': { const k = k0(); if (k) { toggleManual(k, el.dataset.id); renderKid(k); } break; }
       case 'fc-hear': { const k = k0(), st = S.study; if (!k || !st) return; const d = k.flashcards.decks.find(x => x.id === st.deckId), c = d && d.cards.find(x => x.id === st.queue[st.i]); if (c) readCard(c); try { $('#ans').focus(); } catch {} break; }
       case 'fc-show': { const k = k0(), st = S.study; if (!k || !st) return; const d = k.flashcards.decks.find(x => x.id === st.deckId), c = d.cards.find(x => x.id === st.queue[st.i]); moveCard(k, d, c, false); st.revealed = true; st.mustType = true; st.tries = Math.max(1, st.tries); speech.say(c.a, { rate: .85 }); renderStudy(k, d.id); break; }
@@ -707,7 +787,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
   document.addEventListener('pointerdown', e => {
     const b = e.target.closest('[data-hold]'); if (!b) return;
     e.preventDefault(); endHold(); const t0 = performance.now();
-    const step = () => { const k = Math.min(1, (performance.now() - t0) / 1100); b.style.setProperty('--p', k); if (k >= 1) { endHold(); b.dataset.opened = '1'; openParent(); } else if (hold) hold.raf = requestAnimationFrame(step); };
+    const step = () => { const k = Math.min(1, (performance.now() - t0) / 1100); b.style.setProperty('--p', k); if (k >= 1) { endHold(); b.dataset.opened = '1'; if (b.dataset.hold === 'practice') { S.welcome.held = true; const m = $('#w-held'); if (m) m.hidden = false; } else openParent(); } else if (hold) hold.raf = requestAnimationFrame(step); };
     hold = { b, raf: requestAnimationFrame(step) };
   });
   ['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, endHold, true));
