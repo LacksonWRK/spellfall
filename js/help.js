@@ -13,6 +13,7 @@
     ['Scan the spelling list from school', 'lists'],
     ['Turn a quiz or study sheet into flashcards', 'flashcards'],
     ['Give a spelling test out loud', 'spelling'],
+    ['Practice phonics sounds (K–2nd)', 'phonics'],
     ['Make the spelling game easier or harder', 'spelling'],
     ['Change the daily checklist', 'today'],
     ['Change the weekly family goal', 'goal'],
@@ -93,6 +94,15 @@
       <h3>Change it</h3>
       <p>In the game, press and hold <b>Grown-ups</b>, then <b>Typing practice</b>. You can unlock lessons ahead, move back to review, change the keyboard guide, and see trouble keys.</p>
       <p class="fine">Typing works best with a keyboard attached to the iPad.</p>` },
+
+    { id: 'phonics', icon: '🔤', title: 'Phonics', sub: 'Three sound games for K–2nd', body: `
+      <p>Tap <b>Phonics</b> on your child’s page and pick a game. Each game is 8 words, and every word is read aloud.</p>
+      <ul>
+        <li><b>Sound Sort</b>: a word drifts down and your child taps the bin it belongs in, like <b>ee</b> or <b>ea</b>, <b>ai</b> or <b>ay</b>, <b>sh / ch / th</b>, or short a vs. long a. Tap the word to hear it again.</li>
+        <li><b>Blend Builder</b>: your child hears a word and taps letter tiles in order to build it. Tap a letter in the word to take it back. Kindergarten gets short words like <i>cat</i>, 1st grade gets blends like <i>frog</i>, 2nd grade and up get longer words like <i>storm</i>.</li>
+        <li><b>Magic-e Door</b>: tap <b>+ e</b> and hear the word change, like <i>cap</i> to <i>cape</i>. Then your child picks which of the two words they heard.</li>
+      </ul>
+      <p>A first-try answer counts toward the stars. A finished game checks off a Today item linked to <b>Phonics</b>. To add one, see <a href="#/help/today">Today checklist</a>.</p>` },
 
     { id: 'lists', icon: '📝', title: 'Spelling lists', sub: 'Typed, built-in, or scanned', body: `
       <p>Each child has one list for the week. Setting a new one moves the old list to <b>Past weeks</b>, with its scores.</p>

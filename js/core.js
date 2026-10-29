@@ -114,7 +114,7 @@
     return { id: k.id || uid('p'), name: k.name || 'Learner', grade: k.grade || '1st', avatar: k.avatar || '🚀', color: k.color || 'yellow',
       order: k.order ?? 0, createdAt: k.createdAt || Date.now(),
       spellfall: k.spellfall || {}, flashcards: { decks: [], ...(k.flashcards || {}) },
-      math: { skills: {}, best: {}, pics: 0, ...(k.math || {}) }, log: k.log || [] };
+      math: { skills: {}, best: {}, pics: 0, ...(k.math || {}) }, phonics: { best: {}, ...(k.phonics || {}) }, log: k.log || [] };
   }
   /* Spellfall adapter: Spellfall keeps its own "player" shape; we store it under kid.spellfall */
   store.spellfallPlayers = function () { return this.kids().map(k => ({ ...clone(k.spellfall || {}), id: k.id, name: k.name, grade: k.grade, avatar: k.avatar, color: k.color, order: k.order, createdAt: k.createdAt })); };

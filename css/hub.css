@@ -57,6 +57,30 @@ a{color:var(--yellow)}
 .install .steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:2px}
 @media (max-width:560px){.install{flex-wrap:wrap;justify-content:space-between}.install img{width:48px;height:48px;border-radius:11px}.install .col{order:3;flex-basis:100%!important}}
 
+/* phonics */
+.ph-menu{display:flex;flex-direction:column;gap:12px}
+.ph-game{padding:18px}
+.ph-game .ic{font-size:38px}
+.ph-stage{height:150px;display:flex;justify-content:center;align-items:flex-start;overflow:hidden}
+.ph-word{font-family:var(--f-display);font-weight:700;font-size:clamp(44px,9vw,64px);color:var(--chalk);padding:4px 18px;border-radius:12px;background:rgba(0,0,0,.18)}
+.ph-word.falling{animation:phfall 6s ease-in forwards}
+@keyframes phfall{from{transform:translateY(-40px);opacity:.2}12%{opacity:1}to{transform:translateY(64px)}}
+.ph-bins{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.ph-bin{min-width:130px;min-height:96px;padding:12px 18px;border-radius:var(--chalk-r);border:3px dashed var(--chalk-faint);background:rgba(0,0,0,.2);font-family:var(--f-display);font-weight:700;font-size:34px;color:var(--yellow)}
+.ph-bin:not([disabled]):hover{border-color:var(--yellow)}
+.ph-bin.ok,.ph-slot.ok{border-style:solid;border-color:var(--good);background:rgba(31,157,90,.25);color:var(--chalk)}
+.ph-bin.bad,.ph-slot.bad{animation:shake .4s;border-color:var(--bad)}
+.ph-slots{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.ph-slot{width:64px;height:76px;border-bottom:4px solid var(--chalk-dim);display:grid;place-items:center;font-family:var(--f-display);font-size:44px;font-weight:700;border-radius:8px 8px 0 0}
+.ph-slot.full{background:rgba(255,255,255,.08);color:var(--chalk)}
+.ph-tiles{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.ph-tile{width:66px;height:66px;border-radius:14px;background:var(--paper);color:var(--ink);font-family:var(--f-display);font-size:38px;font-weight:700;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.ph-tile[disabled]{opacity:.2;box-shadow:none}
+.ph-door{display:flex;justify-content:center}
+.ph-doorword{display:inline-block;padding:34px 40px;border-radius:120px 120px 12px 12px;background:var(--wood,#7A4E33);border:6px solid #553421;font-family:var(--f-display);font-size:clamp(52px,11vw,80px);font-weight:700;color:var(--paper);letter-spacing:.04em}
+.ph-e{color:rgba(251,250,243,.35);margin-left:4px}
+@media (prefers-reduced-motion:reduce){.ph-word.falling{animation:none}}
+
 /* welcome steps */
 .stepper{list-style:none;margin:0;padding:0;display:flex;justify-content:center;gap:8px 18px;flex-wrap:wrap;font-size:15px;color:var(--chalk-dim)}
 .stepper li{display:flex;align-items:center;gap:8px}

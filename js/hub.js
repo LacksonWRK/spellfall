@@ -23,7 +23,8 @@
     spelling: { label: 'Spelling', icon: '✏️', color: COLORS.yellow },
     flashcards: { label: 'Flashcards', icon: '🃏', color: COLORS.blue },
     math: { label: 'Math', icon: '➗', color: COLORS.green },
-    typing: { label: 'Typing', icon: '⌨️', color: COLORS.lilac }
+    typing: { label: 'Typing', icon: '⌨️', color: COLORS.lilac },
+    phonics: { label: 'Phonics', icon: '🔤', color: COLORS.pink }
   };
 
   store.load();
@@ -68,6 +69,7 @@
     if (subj === 'typing') return `apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=type`;
     if (subj === 'flashcards') return `#/kid/${k.id}/flashcards`;
     if (subj === 'math') return `#/kid/${k.id}/math`;
+    if (subj === 'phonics') return `#/kid/${k.id}/phonics`;
     return null;
   }
 
@@ -86,11 +88,12 @@
       const k = store.kid(r[1]); if (!k) return go('#/');
       if (r[2] === 'flashcards') return r[3] ? renderStudy(k, r[3]) : renderDecks(k);
       if (r[2] === 'math') return renderMath(k);
+      if (r[2] === 'phonics') return window.HubPhonics.render({ app, store, speech, esc, starRow, confetti }, k, r[3]);
       return renderKid(k);
     }
     renderHome();
   }
-  window.addEventListener('hashchange', () => { stopDrill(); render(); window.scrollTo(0, 0); });
+  window.addEventListener('hashchange', () => { stopDrill(); if (route()[2] !== 'phonics') window.HubPhonics.stop(); render(); window.scrollTo(0, 0); });
 
   /* ---------- help: How do I list + one guide per section (content in js/help.js) ---------- */
   function renderHelp(id) {
@@ -273,7 +276,7 @@
             <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">➗</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} pictures found</span></a>
             <a class="subj" style="--sc:${SUBJECTS.typing.color}" href="${subjectHref(k, 'typing')}"><span class="ic">⌨️</span><b>Typing</b><span>${(() => { const n = ((k.spellfall.typing || {}).unlocked || 0) + 1; return `${n} lesson${n === 1 ? '' : 's'} unlocked`; })()}</span></a>
             <a class="subj" style="--sc:${COLORS.orange}" href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=hidden"><span class="ic">🙈</span><b>Hidden words</b><span>Spell from memory</span></a>
-            <div class="subj soon" aria-disabled="true"><span class="ic">🔤</span><b>Phonics</b><span>Coming soon</span></div>
+            <a class="subj" style="--sc:${SUBJECTS.phonics.color}" href="#/kid/${k.id}/phonics"><span class="ic">🔤</span><b>Phonics</b><span>Sound Sort · Blend Builder · Magic-e</span></a>
           </div>
           ${meterHTML()}
         </div>
