@@ -59,6 +59,7 @@ Where things go:
 ```
 index.html            hub shell
 css/hub.css           chalkboard theme
+css/fonts.css         Andika + Cabin Sketch, shipped in fonts/ (SIL Open Font License); no Google requests
 js/core.js            storage (versioned, one family per browser), AI client, speech, PIN
 js/content.js         built-in spelling lists and math skill generators by grade
 js/hub.js             screens: kids, Today, flashcards, math, parent mode
