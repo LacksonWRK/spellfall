@@ -49,6 +49,7 @@ Where things go:
 - The key is stored only in that browser. It is never included in backups, and it is only sent to `api.anthropic.com`.
 - Only the photo is sent to Claude, downscaled with location metadata removed. Kids' names and progress never leave the device.
 - Everything else works without a key: you can type lists and cards by hand.
+- The full plain-language privacy notice is `privacy.html` (linked from the kid picker, setup and Settings).
 - The model defaults to `claude-sonnet-5-5`, and you can change it in Settings.
 
 ## Layout

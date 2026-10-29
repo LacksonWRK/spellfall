@@ -126,7 +126,7 @@
         </div>`).join('')}</div>
       <div class="row"><button class="btn ghost small" data-act="s-add">+ Add another child</button></div>
       <div class="row"><button class="btn primary big" data-act="s-go">Let's learn</button></div>
-      <p class="fine">Everything is saved on this device only. Make a backup now and then from Parent settings.</p>
+      <p class="fine">Everything is saved on this device only. Make a backup now and then from Parent settings. <a href="privacy.html">Privacy</a></p>
     </div>`;
   }
 
@@ -161,7 +161,7 @@
       }).join('')}</div>
       ${meterHTML()}
       ${backupNagHTML()}
-      <div class="spread"><span class="fine">Saved on this device.</span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
+      <div class="spread"><span class="fine">Saved on this device · <a href="privacy.html">Privacy</a></span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
     </div>`;
   }
 
@@ -593,7 +593,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     const s = store.secret();
     return `<div class="cols">
       <section class="card"><h2 class="h3">Claude photo scanning</h2>
-        <p class="muted">Photo scanning uses your own Anthropic API key. It is saved only in this browser, is never included in backups, and is only sent to Anthropic.</p>
+        <p class="muted">Photo scanning uses your own Anthropic API key. It is saved only in this browser, is never included in backups, and is only sent to Anthropic. <a href="privacy.html">Privacy details</a></p>
         <ol class="fine" style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:4px"><li>Make a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</li><li>Set a low monthly spend limit for safety. A scanned page costs a few cents at most.</li><li>Paste it below.</li></ol>
         <div class="field"><label class="lbl" for="api-key">API key</label><input id="api-key" class="inp" type="password" autocomplete="off" placeholder="${s.apiKey ? 'Saved · paste a new key to replace it' : 'sk-ant-…'}"></div>
         <div class="field"><label class="lbl" for="api-model">Model</label><input id="api-model" class="inp" value="${esc(s.model)}" autocomplete="off"><small class="fine">Default: claude-sonnet-5-5. Change it only if Anthropic retires this model.</small></div>

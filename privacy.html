@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; object-src 'none'; base-uri 'self'">
+<title>Privacy · Spellfall Homeschool</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#23372E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Cabin+Sketch:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/hub.css">
+<style>
+.doc{max-width:720px}
+.doc h2{margin-top:6px}
+.doc p,.doc li{max-width:64ch}
+.doc ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.doc section{display:flex;flex-direction:column;gap:10px}
+</style>
+</head>
+<body>
+<main class="wrap doc">
+  <a class="btn ghost small back" href="./">← Back to Spellfall</a>
+  <h1 class="h1">Privacy</h1>
+  <p class="note">Short version: your family's names, progress and lists stay on your device. There are no accounts, no ads, no tracking and no cookies. Photos are only sent out if you turn on photo scanning with your own key.</p>
+
+  <section class="card">
+    <h2 class="h3">What Spellfall saves, and where</h2>
+    <ul>
+      <li>Your kids' names, grades and pictures, their spelling and flashcard lists, and their progress are saved <b>only in this browser on this device</b>.</li>
+      <li>Nothing is sent to us. Spellfall has no server and no accounts, and we never see your family's information.</li>
+      <li>Clearing the browser's website data, or deleting the Home Screen app, erases it. A backup file (Parents → Backup) is the only copy that leaves the device, and it goes wherever you save it.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2 class="h3">Photo scanning (optional)</h2>
+    <ul>
+      <li>Scanning a worksheet or spelling list uses <b>your own Anthropic API key</b>. It's off until you add one in Parents → Settings.</li>
+      <li>When you scan, only the photo goes to Anthropic (the company that makes Claude) to be read. Before it's sent, the photo is shrunk and its location data is removed. Kids' names and progress are not sent.</li>
+      <li>A photo can still show whatever is written on the page, such as a child's name on a worksheet. Crop or cover it if you'd rather not send it.</li>
+      <li>Your key stays in this browser. It is never put in backups and is only ever sent to Anthropic.</li>
+      <li>How Anthropic handles what it receives is covered by <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic's privacy policy</a>.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2 class="h3">Other services the site uses</h2>
+    <ul>
+      <li><b>Hosting:</b> the site is served by GitHub Pages. Like any web host, GitHub may keep standard server logs, such as IP addresses. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub's privacy statement</a>.</li>
+      <li><b>Fonts:</b> the handwriting-style fonts load from Google Fonts, so Google sees your device's IP address when a page opens. See <a href="https://developers.google.com/fonts/faq/privacy" target="_blank" rel="noopener">Google Fonts privacy</a>.</li>
+      <li><b>Read-aloud:</b> words are spoken by your device's built-in voices. In some browsers, such as Chrome, a voice may be provided online by the browser maker.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2 class="h3">Children</h2>
+    <p class="muted">Spellfall is made for parents to use with their children. It doesn't ask children for personal information, and it doesn't collect any. Names you type are kept on your device only.</p>
+  </section>
+
+  <section class="card">
+    <h2 class="h3">Not affiliated</h2>
+    <p class="muted">Spellfall Homeschool is an independent project. It is not affiliated with or endorsed by Abeka, BJU Press, The Good and the Beautiful, Sonlight, or any other curriculum publisher.</p>
+  </section>
+
+  <section class="card">
+    <h2 class="h3">Questions</h2>
+    <p class="muted">Open an issue on <a href="https://github.com/LacksonWRK/spellfall/issues" target="_blank" rel="noopener">GitHub</a>. If this page changes, the date below changes too.</p>
+    <p class="fine">Last updated October 29, 2026.</p>
+  </section>
+  <a class="btn ghost small back" href="./">← Back to Spellfall</a>
+</main>
+</body>
+</html>
