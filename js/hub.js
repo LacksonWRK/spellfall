@@ -1,8 +1,8 @@
 /* Spellfall Homeschool hub: kid picker, Today, Flashcards, Math, Parent mode. */
 (function () {
   'use strict';
-  const { store, ai, speech, pin, uid, clone, today, VERSION, FEEDBACK_URL } = window.Hub;
-  const feedbackHref = () => `${FEEDBACK_URL}?title=${encodeURIComponent('Feedback')}&body=${encodeURIComponent(`Version ${VERSION}\n\nWhat happened, or what would help:\n`)}`;
+  const { store, ai, speech, pin, uid, clone, today, VERSION, FEEDBACK_EMAIL } = window.Hub;
+  const feedbackHref = () => `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`Spellfall feedback (v${VERSION})`)}&body=${encodeURIComponent(`Version ${VERSION}\nDevice: \n\nWhat happened, or what would help:\n`)}`;
   const C = window.HubContent;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -113,7 +113,7 @@
         </section>
         <section class="col" style="gap:14px"><h2 class="h3">Guides</h2>
           <div class="guides">${H.TOPICS.map(x => `<a class="gcard" href="#/help/${x.id}"><span class="ic" aria-hidden="true">${x.icon}</span><span><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></span></a>`).join('')}</div>
-          <section class="card"><h2 class="h3">Something not working?</h2><p class="muted">Tell us what happened or what would help. <a href="${feedbackHref()}" target="_blank" rel="noopener">Send feedback</a></p></section>
+          <section class="card"><h2 class="h3">Something not working?</h2><p class="muted">Tell us what happened or what would help, at ${FEEDBACK_EMAIL}. <a href="${feedbackHref()}">Send feedback</a></p></section>
           <p class="fine"><a href="privacy.html">Privacy</a> · Spellfall Homeschool v${VERSION} · not affiliated with any curriculum publisher.</p>
         </section>
       </div>
@@ -240,7 +240,7 @@
       }).join('')}</div>
       ${meterHTML()}
       ${backupNagHTML()}
-      <div class="spread"><span class="fine">Saved on this device · <a href="#/help">Help</a> · <a href="privacy.html">Privacy</a> · <a href="${feedbackHref()}" target="_blank" rel="noopener">Send feedback</a> · v${VERSION}</span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
+      <div class="spread"><span class="fine">Saved on this device · <a href="#/help">Help</a> · <a href="privacy.html">Privacy</a> · <a href="${feedbackHref()}">Send feedback</a> · v${VERSION}</span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
     </div>`;
   }
 
@@ -427,7 +427,7 @@
       <div class="mathbar"><span>Problem <b>${d.i + 1}</b> of 20</span><span>✓ <b>${d.right}</b></span><span id="mclock">${Math.round((Date.now() - d.t0) / 1000)}s</span></div>
       ${picHTML(d)}
       <div class="mathq ${p.q.length > 12 ? 'sm' : ''}">${esc(p.q)}${/=|\?|Round/.test(p.q) ? '' : ' ='}</div>
-      <form class="answer" id="mform" autocomplete="off"><input id="mans" class="inp" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="Answer" placeholder="?"><button class="btn primary" type="submit">Check</button></form>
+      <form class="answer" id="mform" autocomplete="off"><input id="mans" class="inp" ${C.SKILLS[d.skill].neg ? 'inputmode="text"' : 'inputmode="numeric" pattern="[0-9]*"'} autocomplete="off" aria-label="Answer" placeholder="?"><button class="btn primary" type="submit">Check</button></form>
       <div class="row"><button class="btn small ghost" data-act="m-hear">🔊 Read it to me</button><span class="fine" id="mmsg" aria-live="polite">${d.tries ? 'Not quite. Try once more!' : ''}</span></div>
     </div>`;
     const inp = $('#mans'); try { inp.focus({ preventScroll: true }); } catch {}
@@ -543,8 +543,9 @@
       </section>
       <section class="card"><h2 class="h3">Built-in lists · ${esc(gradeLabel(k.grade))}</h2>
         ${(() => { const cur = store.family.settings.curriculum, name = (CURRICULA.find(c => c[0] === cur) || CURRICULA[0])[1];
-          return `<div class="note spread"><span>📚 ${cur === 'abeka' ? `<b>Following Abeka’s ${esc(k.grade)}-grade phonics order</b>` : `<b>Typical ${esc(k.grade)}-grade phonics order</b> · Curriculum: ${esc(name)}`}</span><button class="btn small ghost" data-act="p-tab" data-id="settings">Change</button></div>`; })()}
-        <p class="fine">For weeks with no school list. Grouped by phonics pattern or spelling rule. ${store.family.settings.curriculum === 'abeka' ? 'These are original lists, not Abeka’s.' : 'To follow your own curriculum, type or scan its list instead.'}</p>
+          const upper = !C.ABEKA_GRADES.includes(k.grade), what = upper ? 'spelling patterns and roots' : 'phonics order';
+          return `<div class="note spread"><span>📚 ${cur === 'abeka' && !upper ? `<b>Following Abeka’s ${esc(k.grade)}-grade phonics order</b>` : `<b>Typical ${esc(k.grade)}-grade ${what}</b> · Curriculum: ${esc(name)}`}</span><button class="btn small ghost" data-act="p-tab" data-id="settings">Change</button></div>`; })()}
+        <p class="fine">For weeks with no school list. Grouped by phonics pattern or spelling rule. ${store.family.settings.curriculum === 'abeka' && C.ABEKA_GRADES.includes(k.grade) ? 'These are original lists, not Abeka’s.' : 'To follow your own curriculum, type or scan its list instead.'}</p>
         <ul class="list">${lists.map((l, i) => `<li><div><b>${esc(l.title)}</b><small>${esc(l.pattern)} · ${esc(l.words.slice(0, 6).join(', '))}…</small></div><button class="btn small ghost" data-act="sp-use" data-i="${i}">Use this week</button></li>`).join('')}</ul>
       </section></div>`;
   }

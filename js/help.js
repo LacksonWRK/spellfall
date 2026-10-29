@@ -132,7 +132,7 @@
         <li>All 20 right on the first try reveals the whole picture and adds to their pictures found.</li>
         <li><b>Read it to me</b> reads the problem aloud.</li>
       </ul>
-      <p class="fine">Skills change with the grade you set for each child.</p>` },
+      <p class="fine">Skills change with the grade you set for each child, from adding to 10 in kindergarten to equations and slope in 8th grade. For negative answers (7th and 8th grade), type a minus sign first, like -3.</p>` },
 
     { id: 'goal', icon: '🏆', title: 'Family goal', sub: 'One shared weekly meter', body: `
       <p>All your kids fill one meter together each week, so a brother’s win is everyone’s win. There’s no leaderboard and no comparing.</p>

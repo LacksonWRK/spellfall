@@ -19,7 +19,7 @@ It's a plain static website, with no accounts, no server, and no build step. Eve
 |---|---|
 | **Photo → flashcards** | Snap a quiz or study sheet (multi-page OK). Claude turns it into cards, and you check every card before it saves. Answers Claude had to guess are flagged. |
 | **Photo → spelling list** | Scan the weekly school list in Spellfall's grown-ups panel. |
-| **Built-in spelling lists** | Original grade-based lists for weeks without a school list (K–4), grouped by phonics pattern and spelling rule. Parents pick their curriculum in Settings; no publisher's lists are included. |
+| **Built-in spelling lists** | Original grade-based lists for weeks without a school list (K–8): phonics patterns for K–4, spelling patterns, Greek and Latin roots, and subject words for 5th–8th. Parents pick their curriculum in Settings; no publisher's lists are included. |
 | **Progress** | Days active, sessions, tricky flashcards, math pictures, and Spellfall's own score and tricky-word history. |
 | **Welcome** | Three steps for a new family: add kids, pick this week's words and curriculum, then practice the Parents button and set an optional PIN. |
 | **Help** | A How do I list and a short guide for every section, from the kid picker footer or Parents → Help. Content lives in `js/help.js`. |
@@ -77,7 +77,11 @@ Data model: `hub:v1:<familyId>` holds the family. Each kid has `spellfall`, `fla
 - **Spelling and flashcards:** falling-flashcards round (the clue shows, the answer falls), auto weekly list from recent misses.
 - **Science:** Newton's crash lab, rocket thrust, magnet maze.
 - **Something cool:** *Spell-a-Rocket*, where each correct word adds fuel and the rocket launches with real physics.
-- **Later:** offline/installable (PWA), grades 5–8 content, multiple families, an optional hosted "no key needed" scan.
+- **Later:** offline mode, multiple families, an optional hosted "no key needed" scan.
+
+## Feedback
+
+Email spellfallsupport@gmail.com, or use **Send feedback** in the app (it fills in the version).
 
 ## Not affiliated
 

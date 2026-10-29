@@ -1,5 +1,6 @@
-/* Built-in content. Word lists are original, grouped by the phonics patterns and spelling
-   rules that Abeka's published scope & sequence lists for each grade (not copied from Abeka). */
+/* Built-in content. Word lists are original. K-4 are grouped by the phonics patterns and spelling
+   rules that Abeka's published scope & sequence lists for each grade (not copied from Abeka);
+   5th-8th follow common upper-grade spelling patterns, Greek and Latin roots, and subject vocabulary. */
 (function () {
   'use strict';
 
@@ -48,15 +49,58 @@
       { title: 'Homophones', pattern: 'sound the same, spelled differently', words: ['their', 'there', 'they\'re', 'your', 'you\'re', 'its', 'it\'s', 'whose', 'who\'s', 'weather', 'whether', 'principal'] },
       { title: 'Science words: forces', pattern: 'content vocabulary', words: ['force', 'motion', 'friction', 'gravity', 'inertia', 'magnet', 'balanced', 'collision', 'energy', 'object', 'speed', 'direction'] },
       { title: 'Tricky -tion and -sion', pattern: 'endings', words: ['action', 'station', 'question', 'nation', 'mention', 'vacation', 'vision', 'decision', 'television', 'division', 'invention', 'direction'] }
+    ],
+    '5th': [
+      { title: 'Roots port and tract', pattern: 'Latin roots: carry, pull', words: ['transport', 'portable', 'import', 'export', 'report', 'support', 'tractor', 'attract', 'subtract', 'distract', 'extract', 'contract'] },
+      { title: '-able and -ible', pattern: 'suffixes', words: ['comfortable', 'valuable', 'reasonable', 'breakable', 'enjoyable', 'available', 'possible', 'terrible', 'visible', 'flexible', 'horrible', 'invisible'] },
+      { title: '-ant and -ent', pattern: 'suffixes', words: ['important', 'distant', 'elegant', 'pleasant', 'assistant', 'constant', 'different', 'excellent', 'patient', 'silent', 'student', 'frequent'] },
+      { title: '-ous endings', pattern: 'suffix -ous', words: ['famous', 'nervous', 'dangerous', 'enormous', 'generous', 'curious', 'furious', 'various', 'obvious', 'gorgeous', 'courageous', 'mysterious'] },
+      { title: 'Prefixes in-, im-, il-, ir-', pattern: 'prefixes meaning not', words: ['inactive', 'incomplete', 'independent', 'impossible', 'impatient', 'imperfect', 'immature', 'illegal', 'illogical', 'irregular', 'irresponsible', 'irrelevant'] },
+      { title: '-ture and -sure', pattern: 'endings', words: ['picture', 'nature', 'future', 'adventure', 'furniture', 'creature', 'temperature', 'measure', 'treasure', 'pleasure', 'pressure', 'enclosure'] },
+      { title: 'Silent letters', pattern: 'g, s, t, h, b, n you don’t hear', words: ['design', 'foreign', 'island', 'listen', 'castle', 'whistle', 'honest', 'rhyme', 'ghost', 'autumn', 'column', 'doubt'] },
+      { title: '-ment and -ity', pattern: 'noun suffixes', words: ['agreement', 'equipment', 'excitement', 'government', 'environment', 'measurement', 'activity', 'electricity', 'community', 'curiosity', 'ability', 'majority'] },
+      { title: 'Science words: space', pattern: 'content vocabulary', words: ['atmosphere', 'satellite', 'orbit', 'galaxy', 'telescope', 'eclipse', 'meteor', 'planet', 'universe', 'crater', 'rotation', 'gravity'] }
+    ],
+    '6th': [
+      { title: 'Roots spect, struct, rupt', pattern: 'Latin roots: look, build, break', words: ['inspect', 'spectator', 'respect', 'spectacle', 'construct', 'structure', 'destruction', 'instruct', 'erupt', 'interrupt', 'bankrupt', 'disrupt'] },
+      { title: 'Roots graph, phon, tele', pattern: 'Greek roots: write, sound, far', words: ['autograph', 'paragraph', 'photograph', 'biography', 'telephone', 'symphony', 'microphone', 'phonics', 'television', 'telescope', 'telegraph', 'saxophone'] },
+      { title: '-ance and -ence', pattern: 'noun suffixes', words: ['appearance', 'attendance', 'importance', 'allowance', 'ignorance', 'tolerance', 'confidence', 'difference', 'evidence', 'audience', 'existence', 'independence'] },
+      { title: '-cian, -tion, -sion', pattern: 'endings that sound like shun', words: ['musician', 'magician', 'electrician', 'physician', 'politician', 'pollution', 'attention', 'population', 'explosion', 'confusion', 'permission', 'expression'] },
+      { title: 'Easily confused words', pattern: 'look or sound alike', words: ['affect', 'effect', 'accept', 'except', 'advice', 'advise', 'loose', 'lose', 'desert', 'dessert', 'quiet', 'quite'] },
+      { title: 'Prefixes sub-, inter-, trans-, super-', pattern: 'prefixes', words: ['submarine', 'submerge', 'subtitle', 'international', 'interview', 'intersection', 'transform', 'translate', 'transparent', 'superior', 'supervise', 'supermarket'] },
+      { title: 'Often misspelled', pattern: 'words to memorize', words: ['necessary', 'separate', 'definitely', 'probably', 'especially', 'restaurant', 'February', 'Wednesday', 'schedule', 'sincerely', 'business', 'recommend'] },
+      { title: 'Math words', pattern: 'content vocabulary', words: ['numerator', 'denominator', 'equation', 'variable', 'expression', 'perimeter', 'diameter', 'circumference', 'percent', 'ratio', 'integer', 'probability'] }
+    ],
+    '7th': [
+      { title: 'Roots ject, vert, dict', pattern: 'Latin roots: throw, turn, say', words: ['project', 'reject', 'inject', 'objection', 'convert', 'reverse', 'vertical', 'advertise', 'predict', 'dictionary', 'contradict', 'verdict'] },
+      { title: 'Roots bio, geo, chron, therm', pattern: 'Greek roots: life, earth, time, heat', words: ['biology', 'biome', 'antibiotic', 'geography', 'geology', 'geometry', 'chronic', 'chronological', 'synchronize', 'thermometer', 'thermal', 'thermostat'] },
+      { title: 'Doubling and stress', pattern: 'double when the stress is on the last syllable', words: ['occurrence', 'referral', 'transferred', 'permitted', 'forbidden', 'compelling', 'equipped', 'omitted', 'beginner', 'benefited', 'traveled', 'offering'] },
+      { title: '-ary, -ery, -ory', pattern: 'endings', words: ['vocabulary', 'ordinary', 'imaginary', 'temporary', 'military', 'cemetery', 'stationery', 'scenery', 'laboratory', 'territory', 'inventory', 'mandatory'] },
+      { title: 'ph, ps, rh', pattern: 'Greek spellings', words: ['physical', 'phrase', 'sphere', 'pharmacy', 'emphasis', 'triumph', 'catastrophe', 'phenomenon', 'psychology', 'rhythm', 'rhinoceros', 'rhetoric'] },
+      { title: 'Often misspelled', pattern: 'words to memorize', words: ['conscious', 'guarantee', 'judgment', 'knowledge', 'maintenance', 'occasionally', 'privilege', 'recognize', 'tomorrow', 'until', 'achievement', 'argument'] },
+      { title: '-ize, -ify, -ate', pattern: 'verb suffixes', words: ['organize', 'memorize', 'apologize', 'criticize', 'classify', 'identify', 'simplify', 'justify', 'celebrate', 'communicate', 'demonstrate', 'illustrate'] },
+      { title: 'Life science words', pattern: 'content vocabulary', words: ['photosynthesis', 'chlorophyll', 'organism', 'membrane', 'nucleus', 'bacteria', 'ecosystem', 'habitat', 'adaptation', 'species', 'vertebrate', 'cell'] }
+    ],
+    '8th': [
+      { title: '-cede, -ceed, -sede', pattern: 'go, yield', words: ['precede', 'recede', 'concede', 'intercede', 'secede', 'succeed', 'proceed', 'exceed', 'supersede', 'procedure', 'excessive', 'succession'] },
+      { title: 'Roots bene, mal, cred, voc', pattern: 'Latin roots: good, bad, believe, voice', words: ['benefit', 'beneficial', 'benevolent', 'malfunction', 'malicious', 'malnutrition', 'credible', 'incredible', 'credit', 'vocal', 'advocate', 'provoke'] },
+      { title: 'Roots crat, path, psych, auto', pattern: 'Greek roots: rule, feeling, mind, self', words: ['democracy', 'aristocrat', 'bureaucracy', 'sympathy', 'empathy', 'pathetic', 'psychiatrist', 'psyche', 'automatic', 'autonomy', 'autobiography', 'automobile'] },
+      { title: 'Tricky double letters', pattern: 'words to memorize', words: ['accommodate', 'embarrass', 'harass', 'millennium', 'committee', 'possession', 'occasion', 'parallel', 'address', 'aggressive', 'broccoli', 'questionnaire'] },
+      { title: '-ible and -able, harder', pattern: 'suffixes', words: ['irresistible', 'responsible', 'accessible', 'permissible', 'compatible', 'indispensable', 'noticeable', 'manageable', 'knowledgeable', 'changeable', 'dependable', 'inevitable'] },
+      { title: 'Easily confused words', pattern: 'look or sound alike', words: ['complement', 'compliment', 'principle', 'stationary', 'capital', 'capitol', 'council', 'counsel', 'elicit', 'illicit', 'emigrate', 'immigrate'] },
+      { title: 'Hidden vowels', pattern: 'unstressed and silent vowels', words: ['conscience', 'conscientious', 'mischievous', 'pronunciation', 'definite', 'desperate', 'miniature', 'temperament', 'category', 'sophomore', 'liaison', 'hygiene'] },
+      { title: 'Government words', pattern: 'content vocabulary', words: ['constitution', 'amendment', 'legislature', 'judicial', 'executive', 'citizenship', 'republic', 'ratify', 'federal', 'sovereignty', 'colonial', 'abolition'] }
     ]
   };
-  ['5th', '6th', '7th', '8th'].forEach(g => { LISTS[g] = LISTS['4th']; });
+  // K-4 lists follow Abeka's published order of patterns; 5th-8th are general upper-grade patterns
+  const ABEKA_GRADES = ['K', '1st', '2nd', '3rd', '4th'];
 
   function listsFor(grade) { return LISTS[grade] || LISTS['1st']; }
 
   /* ---------- math generators: pure functions returning {q, a, say} ---------- */
   const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
   const SKILLS = {
     add10: { label: 'Adding to 10', grades: ['K', '1st'], gen() { const a = ri(0, 10), b = ri(0, 10 - a); return { q: `${a} + ${b}`, a: a + b }; } },
     sub10: { label: 'Taking away from 10', grades: ['K', '1st'], gen() { const a = ri(1, 10), b = ri(0, a); return { q: `${a} − ${b}`, a: a - b }; } },
@@ -72,12 +116,27 @@
     mul2x1: { label: 'Two-digit × one-digit', grades: ['4th', '5th'], gen() { const a = ri(12, 99), b = ri(2, 9); return { q: `${a} × ${b}`, a: a * b }; } },
     mul10: { label: 'Multiply by 10, 100, 1000', grades: ['4th', '5th'], gen() { const a = ri(2, 99), b = pick([10, 100, 1000]); return { q: `${a} × ${b}`, a: a * b }; } },
     fracof: { label: 'Fraction of a number', grades: ['4th', '5th'], gen() { const d = pick([2, 3, 4, 5, 6, 8, 10]), k = ri(2, 9); return { q: `1/${d} of ${d * k}`, a: k, say: `one ${d === 2 ? 'half' : d === 4 ? 'fourth' : 'over ' + d} of ${d * k}` }; } },
-    round: { label: 'Rounding to tens', grades: ['3rd', '4th'], gen() { let n = ri(11, 989); if (n % 10 === 5) n++; return { q: `Round ${n} to the nearest ten`, a: Math.round(n / 10) * 10, say: `round ${n} to the nearest ten` }; } }
+    round: { label: 'Rounding to tens', grades: ['3rd', '4th'], gen() { let n = ri(11, 989); if (n % 10 === 5) n++; return { q: `Round ${n} to the nearest ten`, a: Math.round(n / 10) * 10, say: `round ${n} to the nearest ten` }; } },
+    pct: { label: 'Percent of a number', grades: ['6th', '7th'], gen() { const p = pick([10, 20, 25, 50, 75]), n = pick([20, 40, 60, 80, 100, 120, 200, 400]); return { q: `${p}% of ${n}`, a: p * n / 100, say: `${p} percent of ${n}` }; } },
+    rate: { label: 'Unit rates', grades: ['6th', '7th'], gen() { const u = ri(2, 12), t = ri(2, 9); return { q: `${u * t} miles in ${t} hours: miles per hour?`, a: u }; } },
+    ops: { label: 'Order of operations', grades: ['6th', '7th'], gen() { const a = ri(2, 20), b = ri(2, 9), c = ri(2, 9); return pick([{ q: `${a} + ${b} × ${c}`, a: a + b * c, say: `${a} plus ${b} times ${c}` }, { q: `(${a} + ${b}) × ${c}`, a: (a + b) * c, say: `${a} plus ${b}, in parentheses, times ${c}` }]); } },
+    sq: { label: 'Squares and exponents', grades: ['6th', '7th', '8th'], gen() { return pick([() => { const n = ri(2, 15); return { q: `${n}²`, a: n * n, say: `${n} squared` }; }, () => { const n = ri(1, 9); return { q: `2${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]}`, a: 2 ** n, say: `2 to the power of ${n}` }; }, () => { const n = ri(2, 5); return { q: `${n}³`, a: n ** 3, say: `${n} cubed` }; }])(); } },
+    gcf: { label: 'Greatest common factor', grades: ['6th'], gen() { const g = ri(2, 12); let a = ri(1, 6), b = ri(1, 6); while (gcd(a, b) !== 1 || a === b) { a = ri(1, 6); b = ri(1, 6); } return { q: `GCF of ${g * a} and ${g * b}?`, a: g, say: `greatest common factor of ${g * a} and ${g * b}` }; } },
+    lcm: { label: 'Least common multiple', grades: ['6th'], gen() { let a = ri(2, 12), b = ri(2, 12); while (a === b) b = ri(2, 12); return { q: `LCM of ${a} and ${b}?`, a: a * b / gcd(a, b), say: `least common multiple of ${a} and ${b}` }; } },
+    intadd: { label: 'Adding and subtracting integers', grades: ['7th', '8th'], neg: true, gen() { const a = ri(-15, 15), b = ri(-15, 15), add = Math.random() < .5; return { q: `${a} ${add ? '+' : '−'} ${b < 0 ? `(${b})` : b}`.replace(/-/g, '−'), a: add ? a + b : a - b, say: `${a} ${add ? 'plus' : 'minus'} ${b}`.replace(/-/g, 'negative ') }; } },
+    intmul: { label: 'Multiplying and dividing integers', grades: ['7th', '8th'], neg: true, gen() { const a = ri(-12, 12) || 3, b = ri(-12, 12) || -4; return pick([{ q: `${a} × ${b < 0 ? `(${b})` : b}`.replace(/-/g, '−'), a: a * b, say: `${a} times ${b}`.replace(/-/g, 'negative ') }, { q: `${a * b} ÷ ${b < 0 ? `(${b})` : b}`.replace(/-/g, '−'), a: a, say: `${a * b} divided by ${b}`.replace(/-/g, 'negative ') }]); } },
+    eq1: { label: 'One-step equations', grades: ['7th'], neg: true, gen() { const x = ri(-9, 15), k = ri(2, 12); return pick([{ q: `x + ${k} = ${x + k}`.replace(/-/g, '−'), a: x, say: `x plus ${k} equals ${x + k}. What is x?`.replace(/-/g, 'negative ') }, { q: `${k}x = ${k * x}`.replace(/-/g, '−'), a: x, say: `${k} x equals ${k * x}. What is x?`.replace(/-/g, 'negative ') }]); } },
+    prop: { label: 'Proportions', grades: ['7th'], gen() { const a = ri(1, 9), b = ri(a + 1, 12), m = ri(2, 8); return { q: `${a}/${b} = x/${b * m}`, a: a * m, say: `${a} over ${b} equals x over ${b * m}. What is x?` }; } },
+    eq2: { label: 'Two-step equations', grades: ['8th'], neg: true, gen() { const x = ri(-9, 12), k = ri(2, 9), c = ri(1, 20); return { q: `${k}x + ${c} = ${k * x + c}`.replace(/-/g, '−'), a: x, say: `${k} x plus ${c} equals ${k * x + c}. What is x?`.replace(/-/g, 'negative ') }; } },
+    roots: { label: 'Square and cube roots', grades: ['8th'], gen() { return Math.random() < .7 ? (n => ({ q: `√${n * n}`, a: n, say: `the square root of ${n * n}` }))(ri(2, 15)) : (n => ({ q: `∛${n ** 3}`, a: n, say: `the cube root of ${n ** 3}` }))(ri(2, 6)); } },
+    slope: { label: 'Slope from two points', grades: ['8th'], neg: true, gen() { const m = pick([-4, -3, -2, -1, 1, 2, 3, 4, 5]), x1 = ri(-5, 5), y1 = ri(-5, 5), dx = ri(1, 4); return { q: `Slope through (${x1}, ${y1}) and (${x1 + dx}, ${y1 + m * dx})?`.replace(/-/g, '−'), a: m, say: `slope of the line through ${x1} comma ${y1} and ${x1 + dx} comma ${y1 + m * dx}`.replace(/-/g, 'negative ') }; } },
+    pyth: { label: 'Pythagorean theorem', grades: ['8th'], gen() { const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25]]), k = pick([1, 1, 2, 3]); return { q: `Legs ${a * k} and ${b * k}: hypotenuse?`, a: c * k, say: `a right triangle has legs ${a * k} and ${b * k}. How long is the hypotenuse?` }; } },
+    sci: { label: 'Powers of ten', grades: ['8th'], gen() { const n = ri(2, 9), e = ri(3, 8); return { q: `${(n * 10 ** e).toLocaleString('en-US')} = ${n} × 10^?`, a: e, say: `${n * 10 ** e} equals ${n} times 10 to what power?` }; } },
   };
   function skillsFor(grade) { return Object.entries(SKILLS).filter(([, s]) => s.grades.includes(grade)).map(([id, s]) => ({ id, ...s })); }
 
   /* hidden pictures revealed tile by tile in math (emoji keeps them light and offline) */
   const PICTURES = ['🚀', '🦖', '🐙', '🦈', '🐉', '🌋', '🦉', '🐢', '🛸', '🏰', '🦁', '🐳', '🦕', '⚽', '🏎️', '🌈'];
 
-  window.HubContent = { LISTS, listsFor, SKILLS, skillsFor, PICTURES };
+  window.HubContent = { LISTS, listsFor, ABEKA_GRADES, SKILLS, skillsFor, PICTURES };
 })();
