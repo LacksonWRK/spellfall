@@ -14,8 +14,10 @@
   const clone = x => JSON.parse(JSON.stringify(x));
   const today = (d = new Date()) => { const z = new Date(d); z.setMinutes(z.getMinutes() - z.getTimezoneOffset()); return z.toISOString().slice(0, 10); };
   const mondayOf = (d = new Date()) => { const m = new Date(d); m.setHours(0, 0, 0, 0); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return today(m); };
-  const read = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
-  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
+  // the test copy at /spellfall-preview/ shares the live site's origin, so it keeps its data under its own names
+  const NS = /\/spellfall-preview\//.test(location.pathname) ? 'preview:' : '';
+  const read = k => { try { return JSON.parse(localStorage.getItem(NS + k) || 'null'); } catch { return null; } };
+  const write = (k, v) => { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } };
 
   const DEFAULT_PLAN = [
     { id: 'spelling', label: 'Spelling game', subject: 'spelling' },
@@ -98,7 +100,7 @@
     },
     secret() { return { apiKey: '', model: 'claude-sonnet-5-5', ...(read(SECRET_KEY) || {}) }; },
     setSecret(s) { write(SECRET_KEY, { ...this.secret(), ...s }); },
-    clearSecret() { try { localStorage.removeItem(SECRET_KEY); } catch {} }
+    clearSecret() { try { localStorage.removeItem(NS + SECRET_KEY); } catch {} }
   };
 
   const ID_FIELDS = ['id', 'name', 'grade', 'avatar', 'color', 'order', 'createdAt'];

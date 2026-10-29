@@ -1,0 +1,66 @@
+{
+  "app": "homeschool-hub",
+  "exportedAt": "2026-10-09T12:47:37.836Z",
+  "family": {
+    "id": "ftestold",
+    "schema": 1,
+    "name": "Our family",
+    "createdAt": 1791550057836,
+    "settings": {
+      "pinHash": null,
+      "pinSalt": null,
+      "meterGoal": 60
+    },
+    "plan": {
+      "template": [
+        {
+          "id": "spelling",
+          "label": "Spelling game",
+          "subject": "spelling"
+        },
+        {
+          "id": "flashcards",
+          "label": "Flashcards",
+          "subject": "flashcards"
+        },
+        {
+          "id": "math",
+          "label": "Math facts",
+          "subject": "math"
+        },
+        {
+          "id": "typing",
+          "label": "Typing lesson",
+          "subject": "typing"
+        },
+        {
+          "id": "reading",
+          "label": "Read aloud 15 minutes",
+          "subject": null
+        }
+      ],
+      "done": {}
+    },
+    "kids": [
+      {
+        "id": "ptest1",
+        "name": "Test Kid",
+        "grade": "1st",
+        "avatar": "🦖",
+        "color": "blue",
+        "order": 0,
+        "createdAt": 1791550057836,
+        "spellfall": {},
+        "flashcards": {
+          "decks": []
+        },
+        "math": {
+          "skills": {},
+          "best": {},
+          "pics": 0
+        },
+        "log": []
+      }
+    ]
+  }
+}
