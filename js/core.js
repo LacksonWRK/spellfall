@@ -4,7 +4,7 @@
 (function () {
   'use strict';
   const VERSION = '0.9.0'; // shown in the footer; becomes 1.0.0 at the public release tag
-  const FEEDBACK_URL = 'https://github.com/LacksonWRK/spellfall/issues/new';
+  const FEEDBACK_EMAIL = 'spellfallsupport@gmail.com';
   const SCHEMA = 1;
   const META_KEY = 'hub:meta';
   const SECRET_KEY = 'hub:secret';
@@ -219,5 +219,5 @@
     clear() { store.family.settings.pinHash = null; store.family.settings.pinSalt = null; store.save(); }
   };
 
-  window.Hub = { store, ai, speech, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_URL };
+  window.Hub = { store, ai, speech, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_EMAIL };
 })();
