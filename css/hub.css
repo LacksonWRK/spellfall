@@ -51,6 +51,12 @@ a{color:var(--yellow)}
 .hold .ring{width:26px;height:26px;border-radius:50%;background:conic-gradient(var(--yellow) calc(var(--p,0)*360deg),rgba(255,255,255,.14) 0);display:grid;place-items:center;flex:none}
 .hold .ring::after{content:"";width:17px;height:17px;border-radius:50%;background:var(--board)}
 
+/* add to home screen */
+.install{display:flex;gap:16px;align-items:flex-start;padding:18px 20px;border:2.5px dashed var(--yellow);border-radius:var(--chalk-r);background:rgba(246,211,101,.07)}
+.install img{width:64px;height:64px;border-radius:14px;flex:none}
+.install .steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:2px}
+@media (max-width:560px){.install{flex-wrap:wrap;justify-content:space-between}.install img{width:48px;height:48px;border-radius:11px}.install .col{order:3;flex-basis:100%!important}}
+
 /* kid picker */
 .kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,300px));justify-content:center;gap:22px}
 @media (max-width:560px){.kids{grid-template-columns:minmax(0,1fr)}}

@@ -86,12 +86,33 @@
   }
   window.addEventListener('hashchange', () => { stopDrill(); render(); window.scrollTo(0, 0); });
 
+  /* ---------- Add to Home Screen (iPad / iPhone) ----------
+     Safari can clear a site's saved data after a week without a visit; Home Screen apps keep it.
+     The Home Screen app gets its own storage, so families with progress move it over with a backup. */
+  const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isInstalled = () => navigator.standalone === true || !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  function installHTML() {
+    if (!isIOS() || isInstalled() || (store.family.settings.installSnoozeUntil || 0) > Date.now()) return '';
+    const has = store.kids().length > 0;
+    return `<section class="install" aria-labelledby="inst-h">
+      <img src="icons/apple-touch-icon.png" alt="" width="64" height="64">
+      <div class="col" style="gap:6px;min-width:0;flex:1">
+        <h2 class="h3" id="inst-h">Put Spellfall on your Home Screen</h2>
+        <p class="muted">Safari can erase saved progress if a website isn't opened for a week. The Home Screen app keeps it.</p>
+        <ol class="steps"><li>Tap the <b>Share</b> button <span aria-hidden="true">(square with an arrow, on iPhone it may be under <b>⋯</b>)</span></li><li>Choose <b>Add to Home Screen</b></li><li>Open Spellfall from the new icon</li></ol>
+        ${has ? `<p class="note">The Home Screen app starts empty. First download a backup (Parents → Backup), then restore it inside the app.</p>` : ''}
+      </div>
+      <button class="btn ghost small" data-act="install-later">Not now</button>
+    </section>`;
+  }
+
   /* ---------- first run ---------- */
   let setupRows = null;
   function renderSetup() {
     if (!setupRows) setupRows = [{ name: '', grade: '1st', avatar: '🚀', color: 'yellow' }, { name: '', grade: '4th', avatar: '🦖', color: 'blue' }];
     app.innerHTML = `<div class="wrap narrow">
       <div class="logo">Spellfall<small>Homeschool</small></div>
+      ${installHTML()}
       <h1 class="h1 center">Who's learning?</h1>
       <p class="muted center">Add each child. You can change these later in Parent settings.</p>
       <div class="col" id="srows">${setupRows.map((r, i) => `
@@ -115,6 +136,7 @@
   function renderHome() {
     app.innerHTML = `<div class="wrap">
       <div class="logo">Spellfall<small>Homeschool</small></div>
+      ${installHTML()}
       <h1 class="h1 center">Who's learning?</h1>
       <div class="kids">${store.kids().map(k => {
         const plan = planFor(k), n = plan.filter(x => x.done).length;
@@ -584,6 +606,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     switch (a) {
       case 's-av': { const r = setupRows[+el.dataset.i]; r.avatar = AVATARS[(AVATARS.indexOf(r.avatar) + 1) % AVATARS.length]; el.textContent = r.avatar; break; }
       case 's-add': { const ks = Object.keys(COLORS), i = setupRows.length; setupRows.push({ name: '', grade: '1st', avatar: AVATARS[(i * 3 + 2) % AVATARS.length], color: ks[i % ks.length] }); renderSetup(); break; }
+      case 'install-later': store.family.settings.installSnoozeUntil = Date.now() + 7 * 864e5; store.save(); render(); break;
       case 's-del': setupRows.splice(+el.dataset.i, 1); renderSetup(); break;
       case 's-go': { const rows = setupRows.filter(r => r.name.trim()); if (!rows.length) return toast('Type at least one name.'); rows.forEach(r => store.addKid(r.name.trim().slice(0, 20), r.grade, r.avatar, r.color)); setupRows = null; location.hash = '#/'; render(); toast('Ready! Grown-ups: press and hold Parents to add spelling lists.'); break; }
       case 'tick': { const k = k0(); if (k) { toggleManual(k, el.dataset.id); renderKid(k); } break; }
