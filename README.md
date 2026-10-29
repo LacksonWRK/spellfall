@@ -1,6 +1,6 @@
 # Spellfall Homeschool
 
-A small learning hub for homeschool kids, built around **Spellfall**, a falling-words spelling and typing game. It started as a teaching tool for two brothers (1st and 4th grade, Abeka curriculum) and is meant to grow into something other homeschool families can use.
+A small learning hub for homeschool kids, built around **Spellfall**, a falling-words spelling and typing game. It started as a teaching tool for two brothers (1st and 4th grade) and is meant to grow into something other homeschool families can use, alongside whatever curriculum they follow.
 
 It's a plain static website, with no accounts, no server, and no build step. Everything is saved in the browser on the device you use.
 
@@ -19,7 +19,7 @@ It's a plain static website, with no accounts, no server, and no build step. Eve
 |---|---|
 | **Photo → flashcards** | Snap a quiz or study sheet (multi-page OK). Claude turns it into cards, and you check every card before it saves. Answers Claude had to guess are flagged. |
 | **Photo → spelling list** | Scan the weekly school list in Spellfall's grown-ups panel. |
-| **Built-in spelling lists** | Grade-based lists for weeks without a school list (K–4), grouped by the phonics patterns and spelling rules in the order Abeka's published scope and sequence teaches them. These are original lists. Abeka's lists are copyrighted and are not included. |
+| **Built-in spelling lists** | Original grade-based lists for weeks without a school list (K–4), grouped by phonics pattern and spelling rule. Parents pick their curriculum in Settings; no publisher's lists are included. |
 | **Progress** | Days active, sessions, tricky flashcards, math pictures, and Spellfall's own score and tricky-word history. |
 | **Parent PIN** | Press-and-hold, then a 4-digit PIN. It's a kid deterrent, not real security. |
 | **Backup / restore** | Download a JSON file, or restore from one. |
@@ -72,6 +72,10 @@ Data model: `hub:v1:<familyId>` holds the family. Each kid has `spellfall`, `fla
 - **Science:** Newton's crash lab, rocket thrust, magnet maze.
 - **Something cool:** *Spell-a-Rocket*, where each correct word adds fuel and the rocket launches with real physics.
 - **Later:** offline/installable (PWA), grades 5–8 content, multiple families, an optional hosted "no key needed" scan.
+
+## Not affiliated
+
+Spellfall Homeschool is an independent project. It is not affiliated with or endorsed by Abeka, BJU Press, The Good and the Beautiful, Sonlight, or any other curriculum publisher.
 
 ## License
 

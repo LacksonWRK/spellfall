@@ -15,6 +15,8 @@
   const COLORS = { yellow: '#F6D365', blue: '#93CBEA', pink: '#F4A3A8', green: '#A3E4A8', orange: '#F7B267', lilac: '#C9B6F2' };
   const GRADES = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
   const gradeLabel = g => g === 'K' ? 'Kindergarten' : `${g} grade`;
+  const CURRICULA = [['', 'Not set'], ['abeka', 'Abeka'], ['bju', 'BJU Press'], ['tgtb', 'The Good and the Beautiful'], ['sonlight', 'Sonlight'], ['other', 'Something else, or my own']];
+  const NOT_AFFILIATED = 'Spellfall Homeschool is an independent project. It is not affiliated with or endorsed by Abeka, BJU Press, The Good and the Beautiful, Sonlight, or any other curriculum publisher.';
   const young = k => ['K', '1st', '2nd'].includes(k.grade);
   const SUBJECTS = {
     spelling: { label: 'Spelling', icon: '✏️', color: COLORS.yellow },
@@ -461,7 +463,9 @@
         <p class="fine">Scanning a paper list happens in the Spellfall game's grown-ups panel${ai.available() ? '' : ' and needs your API key in Settings'}.</p>
       </section>
       <section class="card"><h2 class="h3">Built-in lists · ${esc(gradeLabel(k.grade))}</h2>
-        <p class="fine">For weeks with no school list. Grouped by the phonics pattern or spelling rule, in the order Abeka's ${esc(k.grade)}-grade scope and sequence teaches them. These are original lists, not Abeka's.</p>
+        <p class="fine">${store.family.settings.curriculum === 'abeka'
+          ? `For weeks with no school list. Grouped by phonics pattern or spelling rule, in the order Abeka's ${esc(k.grade)}-grade phonics sequence teaches them. These are original lists, not Abeka's.`
+          : `For weeks with no school list. Grouped by phonics pattern or spelling rule, in a typical ${esc(k.grade)}-grade order. To follow your own curriculum, type or scan its list instead.`}</p>
         <ul class="list">${lists.map((l, i) => `<li><div><b>${esc(l.title)}</b><small>${esc(l.pattern)} · ${esc(l.words.slice(0, 6).join(', '))}…</small></div><button class="btn small ghost" data-act="sp-use" data-i="${i}">Use this week</button></li>`).join('')}</ul>
       </section></div>`;
   }
@@ -596,6 +600,11 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
         <div class="row"><button class="btn primary small" data-act="api-save">Save</button>${s.apiKey ? '<button class="btn small ghost" data-act="api-test">Test</button><button class="btn small danger" data-act="api-clear">Remove key</button>' : ''}</div>
         <p class="fine" id="api-msg">${s.apiKey ? '✓ A key is saved.' : 'No key saved. Everything else works without one.'}</p>
       </section>
+      <section class="card"><h2 class="h3">Your curriculum</h2>
+        <p class="muted">Spellfall works alongside any curriculum. This only changes how the built-in spelling lists are described.</p>
+        <div class="field"><label class="lbl" for="curric">We use</label><select id="curric" class="inp" style="max-width:340px">${CURRICULA.map(([v, l]) => `<option value="${v}" ${v === (store.family.settings.curriculum || '') ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+        <p class="fine">${NOT_AFFILIATED}</p>
+      </section>
       <section class="card"><h2 class="h3">Parent PIN</h2>
         <p class="muted">Keeps kids out of these settings. It's a speed bump, not a lock: anyone with this device could still clear it.</p>
         <div class="field"><label class="lbl" for="pin-new">${pin.isSet() ? 'New 4-digit PIN' : '4-digit PIN'}</label><input id="pin-new" class="inp" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" style="max-width:160px"></div>
@@ -677,6 +686,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     else if (t.dataset.kname) { const v = t.value.trim().slice(0, 20); if (v) store.updateKid(t.dataset.kname, k => { k.name = v; }); }
     else if (t.dataset.kgrade) { store.updateKid(t.dataset.kgrade, k => { k.grade = t.value; }); render(); }
     else if (t.dataset.psubj !== undefined) { store.family.plan.template[+t.dataset.psubj].subject = t.value || null; store.save(); }
+    else if (t.id === 'curric') { store.family.settings.curriculum = t.value; store.save(); toast('Saved.'); }
     else if (t.id === 'mgoal') { store.family.settings.meterGoal = Math.max(10, Math.min(500, +t.value || 60)); store.save(); }
     else if (t.id === 'file') { const files = [...(t.files || [])].slice(0, 6); t.value = ''; if (files.length) scanFiles(files); }
     else if (t.id === 'importfile') {
