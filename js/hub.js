@@ -542,9 +542,9 @@
         <p class="fine">Scanning a paper list happens in the Spellfall game's grown-ups panel${ai.available() ? '' : ' and needs your API key in Settings'}.</p>
       </section>
       <section class="card"><h2 class="h3">Built-in lists · ${esc(gradeLabel(k.grade))}</h2>
-        <p class="fine">${store.family.settings.curriculum === 'abeka'
-          ? `For weeks with no school list. Grouped by phonics pattern or spelling rule, in the order Abeka's ${esc(k.grade)}-grade phonics sequence teaches them. These are original lists, not Abeka's.`
-          : `For weeks with no school list. Grouped by phonics pattern or spelling rule, in a typical ${esc(k.grade)}-grade order. To follow your own curriculum, type or scan its list instead.`}</p>
+        ${(() => { const cur = store.family.settings.curriculum, name = (CURRICULA.find(c => c[0] === cur) || CURRICULA[0])[1];
+          return `<div class="note spread"><span>📚 ${cur === 'abeka' ? `<b>Following Abeka’s ${esc(k.grade)}-grade phonics order</b>` : `<b>Typical ${esc(k.grade)}-grade phonics order</b> · Curriculum: ${esc(name)}`}</span><button class="btn small ghost" data-act="p-tab" data-id="settings">Change</button></div>`; })()}
+        <p class="fine">For weeks with no school list. Grouped by phonics pattern or spelling rule. ${store.family.settings.curriculum === 'abeka' ? 'These are original lists, not Abeka’s.' : 'To follow your own curriculum, type or scan its list instead.'}</p>
         <ul class="list">${lists.map((l, i) => `<li><div><b>${esc(l.title)}</b><small>${esc(l.pattern)} · ${esc(l.words.slice(0, 6).join(', '))}…</small></div><button class="btn small ghost" data-act="sp-use" data-i="${i}">Use this week</button></li>`).join('')}</ul>
       </section></div>`;
   }
