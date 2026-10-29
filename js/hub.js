@@ -1,7 +1,8 @@
 /* Spellfall Homeschool hub: kid picker, Today, Flashcards, Math, Parent mode. */
 (function () {
   'use strict';
-  const { store, ai, speech, pin, uid, clone, today } = window.Hub;
+  const { store, ai, speech, pin, uid, clone, today, VERSION, FEEDBACK_URL } = window.Hub;
+  const feedbackHref = () => `${FEEDBACK_URL}?title=${encodeURIComponent('Feedback')}&body=${encodeURIComponent(`Version ${VERSION}\n\nWhat happened, or what would help:\n`)}`;
   const C = window.HubContent;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -112,7 +113,8 @@
         </section>
         <section class="col" style="gap:14px"><h2 class="h3">Guides</h2>
           <div class="guides">${H.TOPICS.map(x => `<a class="gcard" href="#/help/${x.id}"><span class="ic" aria-hidden="true">${x.icon}</span><span><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></span></a>`).join('')}</div>
-          <p class="fine"><a href="privacy.html">Privacy</a> · Spellfall Homeschool is not affiliated with any curriculum publisher.</p>
+          <section class="card"><h2 class="h3">Something not working?</h2><p class="muted">Tell us what happened or what would help. <a href="${feedbackHref()}" target="_blank" rel="noopener">Send feedback</a></p></section>
+          <p class="fine"><a href="privacy.html">Privacy</a> · Spellfall Homeschool v${VERSION} · not affiliated with any curriculum publisher.</p>
         </section>
       </div>
     </div>`;
@@ -238,7 +240,7 @@
       }).join('')}</div>
       ${meterHTML()}
       ${backupNagHTML()}
-      <div class="spread"><span class="fine">Saved on this device · <a href="#/help">Help</a> · <a href="privacy.html">Privacy</a></span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
+      <div class="spread"><span class="fine">Saved on this device · <a href="#/help">Help</a> · <a href="privacy.html">Privacy</a> · <a href="${feedbackHref()}" target="_blank" rel="noopener">Send feedback</a> · v${VERSION}</span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
     </div>`;
   }
 
