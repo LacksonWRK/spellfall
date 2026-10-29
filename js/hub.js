@@ -133,6 +133,19 @@
     const m = store.meter(), pct = Math.min(100, Math.round(m.count / m.goal * 100));
     return `<div class="meter"><div class="spread"><span><b>Family goal</b> <span class="fine" style="display:inline">· this week, together</span></span><span class="fine">${m.count} / ${m.goal} ${m.count >= m.goal ? '🏆' : '⭐'}</span></div><div class="bar"><i style="width:${pct}%"></i></div>${m.count >= m.goal ? '<p class="fine">You did it as a team! Ask a grown-up about the family reward.</p>' : ''}</div>`;
   }
+  /* backup reminder for grown-ups: 14+ days since the last backup (or since setup if there's never been one) */
+  function backupNagHTML() {
+    const f = store.family, last = f.lastExport, since = Date.now() - (last || f.createdAt || 0);
+    if (!store.kids().length || since < 14 * 864e5 || (f.settings.backupSnoozeUntil || 0) > Date.now()) return '';
+    const days = Math.floor(since / 864e5);
+    return `<section class="nag" aria-labelledby="nag-h">
+      <div class="col" style="gap:4px;min-width:0;flex:1">
+        <h2 class="h3" id="nag-h">Grown-ups: time for a backup</h2>
+        <p class="muted">${last ? `Your last backup was ${days} days ago.` : 'You haven’t made a backup yet.'} Progress lives only on this device. A backup file keeps it safe if the device is lost or its data is cleared.</p>
+      </div>
+      <div class="row"><button class="btn primary small" data-act="b-export">⬇ Download backup</button><button class="btn ghost small" data-act="backup-later">Later</button></div>
+    </section>`;
+  }
   function renderHome() {
     app.innerHTML = `<div class="wrap">
       <div class="logo">Spellfall<small>Homeschool</small></div>
@@ -145,6 +158,7 @@
           <span class="kmeta">${esc(gradeLabel(k.grade))} · ${n} of ${plan.length} done today</span></a>`;
       }).join('')}</div>
       ${meterHTML()}
+      ${backupNagHTML()}
       <div class="spread"><span class="fine">Saved on this device.</span><button class="hold" data-hold="1"><span class="ring"></span>Parents · press and hold</button></div>
     </div>`;
   }
@@ -606,6 +620,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     switch (a) {
       case 's-av': { const r = setupRows[+el.dataset.i]; r.avatar = AVATARS[(AVATARS.indexOf(r.avatar) + 1) % AVATARS.length]; el.textContent = r.avatar; break; }
       case 's-add': { const ks = Object.keys(COLORS), i = setupRows.length; setupRows.push({ name: '', grade: '1st', avatar: AVATARS[(i * 3 + 2) % AVATARS.length], color: ks[i % ks.length] }); renderSetup(); break; }
+      case 'backup-later': store.family.settings.backupSnoozeUntil = Date.now() + 3 * 864e5; store.save(); render(); break;
       case 'install-later': store.family.settings.installSnoozeUntil = Date.now() + 7 * 864e5; store.save(); render(); break;
       case 's-del': setupRows.splice(+el.dataset.i, 1); renderSetup(); break;
       case 's-go': { const rows = setupRows.filter(r => r.name.trim()); if (!rows.length) return toast('Type at least one name.'); rows.forEach(r => store.addKid(r.name.trim().slice(0, 20), r.grade, r.avatar, r.color)); setupRows = null; location.hash = '#/'; render(); toast('Ready! Grown-ups: press and hold Parents to add spelling lists.'); break; }

@@ -57,6 +57,9 @@ a{color:var(--yellow)}
 .install .steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:2px}
 @media (max-width:560px){.install{flex-wrap:wrap;justify-content:space-between}.install img{width:48px;height:48px;border-radius:11px}.install .col{order:3;flex-basis:100%!important}}
 
+/* backup reminder */
+.nag{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:16px 20px;border-left:5px solid var(--orange);border-radius:10px;background:rgba(247,178,103,.10)}
+
 /* kid picker */
 .kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,300px));justify-content:center;gap:22px}
 @media (max-width:560px){.kids{grid-template-columns:minmax(0,1fr)}}
