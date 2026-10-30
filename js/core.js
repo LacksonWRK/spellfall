@@ -6,7 +6,8 @@
   const VERSION = '0.9.0'; // shown in the footer; becomes 1.0.0 at the public release tag
   const FEEDBACK_EMAIL = 'spellfallsupport@gmail.com';
   const SCHEMA = 1;
-  const ROCKET_TANK = 25; // words spelled right to fill the Spell-a-Rocket tank
+  const ROCKET_TANK = 25; // words spelled right to fill one Spell-a-Rocket tank
+  const ROCKET_MAX = ROCKET_TANK * 20; // tanks stack up to here; past this a flight would run too long for a child
   const META_KEY = 'hub:meta';
   const SECRET_KEY = 'hub:secret';
   const OLD_SPELLFALL_KEY = 'spellfall.players.v1';
@@ -134,7 +135,7 @@
         if (g && !k.log.some(e => e.src === 'spellfall' && e.gameAt === g.at)) {
           k.log = [{ at: Date.now(), date: today(), src: 'spellfall', gameAt: g.at, subject: g.mode === 'type' ? 'typing' : g.mode === 'math' ? 'math' : g.mode === 'flash' ? 'flashcards' : 'spelling', score: g.score, points: g.mode === 'type' ? 3 : Math.min(10, (g.words || 0)), detail: g.mode }, ...k.log].slice(0, 400);
           store.bumpMeter(g.mode === 'type' ? 3 : Math.min(10, g.words || 0));
-          if (!['type', 'math', 'flash'].includes(g.mode)) k.rocket = { ...k.rocket, fuel: Math.min(ROCKET_TANK, ((k.rocket || {}).fuel || 0) + (g.words || 0)) }; // Spell-a-Rocket fuel
+          if (!['type', 'math', 'flash'].includes(g.mode)) k.rocket = { ...k.rocket, fuel: Math.min(ROCKET_MAX, ((k.rocket || {}).fuel || 0) + (g.words || 0)) }; // Spell-a-Rocket fuel: 25 is one tank, 50 is two
         }
       }
     }
@@ -221,5 +222,5 @@
     clear() { store.family.settings.pinHash = null; store.family.settings.pinSalt = null; store.save(); }
   };
 
-  window.Hub = { store, ai, speech, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_EMAIL, ROCKET_TANK };
+  window.Hub = { store, ai, speech, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_EMAIL, ROCKET_TANK, ROCKET_MAX };
 })();

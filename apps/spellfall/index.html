@@ -1660,7 +1660,7 @@ function renderResults() {
   $('#r-stars').hidden = !(r.type || r.hidden);
   const rk = !r.type && !r.facts && HUB.store.kid(r.pid), got = rk ? (r.hidden ? r.first : r.spelled) || 0 : 0, rkEl = $('#r-rocket'); // Spell-a-Rocket fuel from this round
   rkEl.hidden = !got;
-  if (got) { const f = Math.min(HUB.ROCKET_TANK, rk.rocket.fuel || 0); rkEl.textContent = f >= HUB.ROCKET_TANK ? `🚀 +${got} fuel · tank full! Launch your rocket from your page.` : `🚀 +${got} fuel · rocket tank ${f} / ${HUB.ROCKET_TANK}`; }
+  if (got) { const f = rk.rocket.fuel || 0, n = Math.floor(f / HUB.ROCKET_TANK), left = f % HUB.ROCKET_TANK; rkEl.textContent = f >= HUB.ROCKET_MAX ? `🚀 +${got} fuel · every tank is full! Launch your rocket from your page.` : !n ? `🚀 +${got} fuel · rocket tank ${f} / ${HUB.ROCKET_TANK}` : `🚀 +${got} fuel · ${n} full tank${n === 1 ? '' : 's'} ready to launch${left ? ` · next tank ${left} / ${HUB.ROCKET_TANK}` : '!'}`; }
   if (r.hidden) {
     $('#r-title').textContent = r.quit ? `Stopped early, ${r.name}` : r.first === r.total ? `Every word on the first try, ${r.name}!` : `${r.first} of ${r.total} on the first try!`;
     $('#r-stars').innerHTML = starRow(r.stars);
