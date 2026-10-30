@@ -492,9 +492,9 @@ const FACTS = {
   math:{ label:'Math facts', hint:'Type the answer before it lands.' },
   flash:{ label:'Flashcards', hint:'Read the clue at the top. Type the missing word before it lands.' }
 };
-function mathSkills(p) { // only skills whose problems fit on a falling rock: short, no "=" or "?" in them
+function mathSkills(p) { // the same picks as the hub's drills (Parents → Math), minus anything too wordy for a falling rock
   const C = window.HubContent; if (!C) return [];
-  return C.skillsFor(p.grade).filter(sk => { for (let i = 0; i < 6; i++) { const q = sk.gen().q; if (q.length > 14 || /[=?]|^Round/.test(q)) return false; } return true; });
+  return C.fallingFor(HUB.store.kid(p.id) || p);
 }
 function flashCards(p) { const k = HUB.store.kid(p.id); return ((k && k.flashcards.decks) || []).flatMap(d => d.cards).filter(c => c.a && c.q && c.a.length <= 24); }
 const factsReady = (p, m) => m === 'math' ? mathSkills(p).length > 0 : flashCards(p).length > 0;
@@ -1606,7 +1606,7 @@ function renderLobby() {
   if (FACTS[mode]) {
     const ok = factsReady(p, mode), cards = mode === 'flash' ? flashCards(p) : [];
     $('#l-paper').innerHTML = !ok
-      ? (mode === 'math' ? `<div class="paper-empty"><p>No falling math for this grade yet.</p></div>` : `<div class="paper-empty"><p>No flashcards yet.</p><p class="fine">Ask a grown-up to make a deck in Parents → Flashcards.</p></div>`)
+      ? (mode === 'math' ? `<div class="paper-empty"><p>No falling math turned on.</p><p class="fine">Ask a grown-up to turn on adding or times tables in Parents → Math.</p></div>` : `<div class="paper-empty"><p>No flashcards yet.</p><p class="fine">Ask a grown-up to make a deck in Parents → Flashcards.</p></div>`)
       : mode === 'math'
         ? `<div class="paper-title"><span>${esc(gradeLabel(p.grade))}</span><span>mixed</span></div><div class="lines" style="grid-template-columns:1fr">${mathSkills(p).map(sk => `<div class="line sm" style="font-size:24px"><span>${esc(sk.label)}</span></div>`).join('')}</div>`
         : `<div class="paper-title"><span>Answers to know</span><span>${cards.length} cards</span></div><div class="lines">${cards.slice(0, 12).map(c => `<div class="line"><span>${esc(c.a)}</span></div>`).join('')}</div>`;

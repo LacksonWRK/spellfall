@@ -28,7 +28,7 @@
   };
 
   store.load();
-  const S = { parentOK: false, parentAt: 0, ptab: 'kids', pkid: null, scan: null, review: null, study: null, drill: null, mathSkill: {} };
+  const S = { parentOK: false, parentAt: 0, ptab: 'kids', pkid: null, scan: null, review: null, study: null, drill: null, mathSkill: {}, mathEx: {} };
 
   /* ---------- small UI helpers ---------- */
   let toastT = 0;
@@ -428,12 +428,20 @@
   /* ---------- math ---------- */
   function renderMath(k) {
     if (S.drill && S.drill.kidId === k.id) return renderDrill(k);
-    const skills = C.skillsFor(k.grade), sel = S.mathSkill[k.id] || (k.math.last && skills.some(s => s.id === k.math.last) ? k.math.last : skills[0] && skills[0].id);
+    const skills = C.skillsForKid(k), sel = [S.mathSkill[k.id], k.math.last, skills[0] && skills[0].id].find(id => skills.some(s => s.id === id));
     S.mathSkill[k.id] = sel;
+    if (!skills.length) {
+      app.innerHTML = `<div class="wrap narrow">
+        <a class="btn ghost small back" href="#/kid/${k.id}">← ${esc(k.name)}</a>
+        <h1 class="h1">Math facts</h1>
+        <div class="card"><p class="h3">No math picked yet</p><p class="muted">Ask a grown-up to pick some. Press and hold the Parents button, then choose Math.</p></div>
+      </div>`;
+      return;
+    }
     app.innerHTML = `<div class="wrap narrow">
       <a class="btn ghost small back" href="#/kid/${k.id}">← ${esc(k.name)}</a>
       <h1 class="h1">Math facts</h1>
-      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture. Or try <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=math">☄️ Falling Facts</a>: problems fall and you type the answer.</p>
+      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture.${C.fallingFor(k).length ? ` Or try <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=math">☄️ Falling Facts</a>: problems fall and you type the answer.` : ''}</p>
       <div class="skills">${skills.map(s => { const b = k.math.best[s.id]; return `<button class="skill" data-act="m-skill" data-id="${s.id}" aria-pressed="${s.id === sel}"><b>${esc(s.label)}</b><span>${b ? `Best: ${b.right}/20 in ${b.secs}s` : 'New!'}</span></button>`; }).join('')}</div>
       <div class="row"><button class="btn primary big" data-act="m-go" ${sel ? '' : 'disabled'}>Start</button></div>
     </div>`;
@@ -572,12 +580,12 @@
   ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (S.parentOK) S.parentAt = Date.now(); }, true));
 
   /* ---------- parent ---------- */
-  const PTABS = [['kids', 'Kids & progress'], ['spelling', 'Spelling lists'], ['flash', 'Flashcards'], ['today', 'Today plan'], ['settings', 'Settings'], ['backup', 'Backup']];
+  const PTABS = [['kids', 'Kids & progress'], ['spelling', 'Spelling lists'], ['math', 'Math'], ['flash', 'Flashcards'], ['today', 'Today plan'], ['settings', 'Settings'], ['backup', 'Backup']];
   function pk() { const kids = store.kids(); if (!S.pkid || !kids.some(k => k.id === S.pkid)) S.pkid = kids[0] && kids[0].id; return store.kid(S.pkid); }
   function kidTabs() { return `<div class="tabs" role="group" aria-label="Child">${store.kids().map(k => `<button class="tab" data-act="p-kid" data-id="${k.id}" aria-pressed="${k.id === S.pkid}">${esc(k.avatar)} ${esc(k.name)}</button>`).join('')}</div>`; }
   function renderParent() {
     pk();
-    const body = { kids: pKids, spelling: pSpelling, flash: pFlash, today: pToday, settings: pSettings, backup: pBackup }[S.ptab] || pKids;
+    const body = { kids: pKids, spelling: pSpelling, math: pMath, flash: pFlash, today: pToday, settings: pSettings, backup: pBackup }[S.ptab] || pKids;
     app.innerHTML = `<div class="wrap">
       <div class="spread"><h1 class="h1">Parents</h1><div class="row"><a class="btn ghost small" href="#/help">❓ Help</a><a class="btn primary small" href="#/">Done</a></div></div>
       <div class="tabs" role="group" aria-label="Section">${PTABS.map(([id, l]) => `<button class="tab" data-act="p-tab" data-id="${id}" aria-pressed="${S.ptab === id}">${l}</button>`).join('')}</div>
@@ -644,6 +652,25 @@
     const seen = new Set(), out = [];
     for (let w of String(text || '').split(/[\n,;]+/)) { w = w.replace(/^\s*(\d+\s*[.):-]|[-•*·])\s*/, '').replace(/[.!?:"]+$/, '').replace(/\s+/g, ' ').trim(); if (!w || w.length > 32) continue; const kk = w.toLowerCase(); if (seen.has(kk)) continue; seen.add(kk); out.push(w); if (out.length >= 60) break; }
     return out;
+  }
+
+  /* --- math (parent): which skills each child practices --- */
+  function pMath() {
+    const k = pk(); if (!k) return '';
+    const on = new Set(C.mathOnIds(k)), custom = Array.isArray(k.math.on), n = esc(k.name), falling = C.fallingFor(k).length;
+    const grades = s => s.grades.length > 1 ? `${s.grades[0]}–${s.grades[s.grades.length - 1]}` : s.grades[0];
+    const sample = id => S.mathEx[id] || (S.mathEx[id] = C.SKILLS[id].gen().q);
+    return `${kidTabs()}<section class="card">
+        <div class="spread"><h2 class="h3">Math for ${n}</h2><span class="fine">${on.size} skill${on.size === 1 ? '' : 's'} on</span></div>
+        <p class="muted">Turn on what ${n} should practice. This sets both Math facts and Falling Facts. Any skill can be on, even from another grade, so you can move ${n} up or down.</p>
+        ${custom ? `<div class="note spread"><span>These are your choices for ${n}. They stay the same if the grade changes.</span><button class="btn small ghost" data-act="mp-reset">Use the ${esc(gradeLabel(k.grade))} picks</button></div>` : `<p class="fine">Showing the usual picks for ${esc(gradeLabel(k.grade))}. They follow the grade until you change a switch.</p>`}
+        ${!on.size ? `<p class="err">Nothing is on, so ${n}’s math screen will ask for a grown-up. Turn on at least one skill.</p>` : !falling ? `<p class="note">Falling Facts needs a skill that can fall, like adding or times tables. Skills marked “Math facts only” are too wordy for a falling rock.</p>` : ''}
+      </section>
+      <div class="cols">${C.MATH_GROUPS.map(([name, ids]) => `<section class="card"><h3 class="h3">${esc(name)}</h3>${ids.map(id => { const s = C.SKILLS[id]; return `<button class="msw" role="switch" aria-checked="${on.has(id)}" data-act="mp-sw" data-id="${id}"><span class="sw" aria-hidden="true"></span><span class="mt"><b>${esc(s.label)}</b><small>Like ${esc(sample(id))} · ${esc(grades(s))}${C.skillFalls(s) ? '' : ' · Math facts only'}</small></span></button>`; }).join('')}</section>`).join('')}</div>`;
+  }
+  function setMathOn(k, ids) { // matching the grade's defaults saves nothing, so a later grade change still follows along
+    const def = C.defaultMathOn(k.grade);
+    store.updateKid(k.id, kk => { if (ids && !(ids.length === def.length && def.every(id => ids.includes(id)))) kk.math.on = ids; else delete kk.math.on; });
   }
 
   /* --- flashcards (parent): scan, review, decks --- */
@@ -820,6 +847,8 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
       case 'k-add': { const n = ($('#nk-name').value || '').trim().slice(0, 20); if (!n) return toast('Type a name first.'); const ks = Object.keys(COLORS), i = store.kids().length; store.addKid(n, $('#nk-grade').value, AVATARS[(i * 5 + 4) % AVATARS.length], ks[i % ks.length]); render(); toast(`Added ${n}.`); break; }
       case 'sp-save': { const k = pk(), w = parseWords($('#sp-text').value); if (!w.length) return toast('Type at least one word.'); setSpellingList(k, 'Week of ' + new Date(window.Hub.mondayOf() + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), w); render(); toast(`Saved ${w.length} words for ${k.name}.`); break; }
       case 'sp-use': { const k = pk(), l = C.listsFor(k.grade)[+el.dataset.i]; setSpellingList(k, l.title, l.words.slice()); render(); toast(`“${l.title}” is ${k.name}'s list this week.`); break; }
+      case 'mp-sw': { const k = pk(), on = new Set(C.mathOnIds(k)), id = el.dataset.id; if (on.has(id)) on.delete(id); else on.add(id); setMathOn(k, [...on]); render(); $(`[data-act="mp-sw"][data-id="${id}"]`).focus({ preventScroll: true }); break; }
+      case 'mp-reset': { const k = pk(); setMathOn(k, null); render(); toast(`${k.name} is back to the usual picks for ${gradeLabel(k.grade)}.`); break; }
       case 'f-stop': if (S.scan && S.scan.ctl) S.scan.ctl.abort(); S.scan = null; render(); break;
       case 'f-manual': S.scan = null; S.review = { kidId: pk().id, title: 'My flashcards', subject: '', cards: [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }] }; render(); break;
       case 'f-edit': { const k = pk(), d = k.flashcards.decks.find(x => x.id === el.dataset.id); S.review = { kidId: k.id, deckId: d.id, title: d.title, subject: d.subject, cards: d.cards.map(c => ({ ...c })) }; render(); break; }
@@ -854,7 +883,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     const t = e.target;
     if (t.dataset.sg !== undefined && setupRows) setupRows[+t.dataset.sg].grade = t.value;
     else if (t.dataset.kname) { const v = t.value.trim().slice(0, 20); if (v) store.updateKid(t.dataset.kname, k => { k.name = v; }); }
-    else if (t.dataset.kgrade) { store.updateKid(t.dataset.kgrade, k => { k.grade = t.value; }); render(); }
+    else if (t.dataset.kgrade) { const k = store.updateKid(t.dataset.kgrade, kk => { kk.grade = t.value; }); render(); if (Array.isArray(k.math.on)) toast(`${k.name}’s math stays as you set it. Change it in Parents → Math.`); }
     else if (t.dataset.psubj !== undefined) { store.family.plan.template[+t.dataset.psubj].subject = t.value || null; store.save(); }
     else if (t.id === 'curric') { store.family.settings.curriculum = t.value; store.save(); toast('Saved.'); }
     else if (t.id === 'mgoal') { store.family.settings.meterGoal = Math.max(10, Math.min(500, +t.value || 60)); store.save(); }

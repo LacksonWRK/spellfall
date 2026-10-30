@@ -135,6 +135,29 @@
   };
   function skillsFor(grade) { return Object.entries(SKILLS).filter(([, s]) => s.grades.includes(grade)).map(([id, s]) => ({ id, ...s })); }
 
+  /* Which skills a child practices. kid.math.on (skill ids) is the parent's choice; with none saved the
+     grade's defaults apply, so a grade change follows along. skillsForKid drives the drill screen and
+     Falling Facts both, so the two can't disagree. */
+  const DEFAULT_ON = { K: ['add10'], '1st': ['add10', 'add18'], '2nd': ['add18', 'sub18', 'missing', 'skip', 'tens', 'add2d'] };
+  const defaultMathOn = grade => DEFAULT_ON[grade] || skillsFor(grade).map(s => s.id);
+  function mathOnIds(kid) { const saved = kid.math && kid.math.on, on = Array.isArray(saved) ? saved : defaultMathOn(kid.grade); return Object.keys(SKILLS).filter(id => on.includes(id)); }
+  const skillsForKid = kid => mathOnIds(kid).map(id => ({ id, ...SKILLS[id] }));
+  const MATH_GROUPS = [
+    ['Adding', ['add10', 'add18', 'add2d']],
+    ['Subtracting', ['sub10', 'sub18']],
+    ['Multiplying', ['mul5', 'mul12', 'mul2x1', 'mul10']],
+    ['Dividing', ['div12']],
+    ['Numbers and place value', ['missing', 'skip', 'tens', 'round']],
+    ['Fractions and percents', ['fracof', 'pct', 'rate', 'prop']],
+    ['Factors, powers and roots', ['ops', 'gcf', 'lcm', 'sq', 'roots', 'sci']],
+    ['Negative numbers', ['intadd', 'intmul']],
+    ['Equations and geometry', ['eq1', 'eq2', 'slope', 'pyth']]
+  ];
+  /* Falling Facts: a rock has room for a short problem, and it should read as clean math */
+  const fallsOnARock = q => q.length <= 14 && !/[=?a-z]/i.test(q);
+  const skillFalls = sk => { for (let i = 0; i < 8; i++) if (!fallsOnARock(sk.gen().q)) return false; return true; };
+  const fallingFor = kid => skillsForKid(kid).filter(skillFalls);
+
   /* hidden pictures revealed tile by tile in math (emoji keeps them light and offline). A child can
      guess one by spelling it: `ok` is every spelling that counts. age: K-2nd get 'young' + 'all', 3rd and up get 'older' + 'all'. */
   const PICTURES = [
@@ -175,5 +198,5 @@
   const guessKey = s => String(s || '').toLowerCase().replace(/^\s*(a|an|the)\s+/, '').replace(/[^a-z]/g, ''); // "a Race car" -> racecar
   const pictureMatches = (pic, text) => pic.ok.includes(guessKey(text));
 
-  window.HubContent = { LISTS, listsFor, ABEKA_GRADES, SKILLS, skillsFor, PICTURES, picturesFor, pictureMatches, guessKey };
+  window.HubContent = { LISTS, listsFor, ABEKA_GRADES, SKILLS, skillsFor, defaultMathOn, mathOnIds, skillsForKid, MATH_GROUPS, skillFalls, fallingFor, PICTURES, picturesFor, pictureMatches, guessKey };
 })();
