@@ -145,13 +145,15 @@
       <p>No scanning? Tap <b>Type cards</b> to make them by hand. Each deck can be edited, restarted from the Stones, or deleted.</p>` },
 
     { id: 'math', icon: '➗', title: 'Math facts', sub: '20-problem drills with a hidden picture', body: `
-      <p>Your child picks a skill for their grade (adding, subtracting, times tables, and more) and answers 20 problems. Each right answer uncovers part of a hidden picture.</p>
+      <p>Your child picks a skill and answers 20 problems. Each right answer uncovers part of a hidden picture.</p>
       <ul>
         <li>A wrong answer gets one more try. After that the answer is shown and the drill moves on.</li>
         <li>The end screen shows the score, time, a new best, and a <b>Practice these</b> list of misses.</li>
-        <li>All 20 right on the first try reveals the whole picture and adds to their pictures found.</li>
         <li><b>Read it to me</b> reads the problem aloud.</li>
       </ul>
+      <h3>Guess the hidden picture</h3>
+      <p>After a few problems your child can tap <b>I know what it is!</b> and spell the picture. Spelling it right shows the whole picture and earns a picture found plus 3 bonus stars for the family goal when they finish their 20 problems. So nobody skips the math.</p>
+      <p>A wrong guess costs nothing. They just solve 3 more problems before guessing again. Getting all 20 right on the first try also counts as a picture found. Kindergarten to 2nd grade get easier pictures to spell, like <i>car</i> and <i>fish</i>.</p>
       <p><b>Falling Facts</b>: tap <b>Falling Facts</b> on the Math screen, or choose <b>Math facts</b> in the spelling game. Problems for your child’s grade fall from the sky and they type each answer before it lands. Same worlds, speed and miss settings as the spelling game.</p>
       <p class="fine">Skills change with the grade you set for each child, from adding to 10 in kindergarten to equations and slope in 8th grade. For negative answers (7th and 8th grade), type a minus sign first, like -3.</p>` },
 

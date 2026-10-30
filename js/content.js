@@ -135,8 +135,45 @@
   };
   function skillsFor(grade) { return Object.entries(SKILLS).filter(([, s]) => s.grades.includes(grade)).map(([id, s]) => ({ id, ...s })); }
 
-  /* hidden pictures revealed tile by tile in math (emoji keeps them light and offline) */
-  const PICTURES = ['🚀', '🦖', '🐙', '🦈', '🐉', '🌋', '🦉', '🐢', '🛸', '🏰', '🦁', '🐳', '🦕', '⚽', '🏎️', '🌈'];
+  /* hidden pictures revealed tile by tile in math (emoji keeps them light and offline). A child can
+     guess one by spelling it: `ok` is every spelling that counts. age: K-2nd get 'young' + 'all', 3rd and up get 'older' + 'all'. */
+  const PICTURES = [
+    { art: '🚗', name: 'car', ok: ['car', 'racecar', 'automobile'], age: 'young' },
+    { art: '🚌', name: 'bus', ok: ['bus', 'schoolbus'], age: 'young' },
+    { art: '🐱', name: 'cat', ok: ['cat', 'kitty', 'kitten'], age: 'young' },
+    { art: '🐶', name: 'dog', ok: ['dog', 'puppy', 'pup', 'doggy'], age: 'young' },
+    { art: '🐷', name: 'pig', ok: ['pig', 'piggy', 'hog'], age: 'young' },
+    { art: '🐮', name: 'cow', ok: ['cow'], age: 'young' },
+    { art: '🐟', name: 'fish', ok: ['fish'], age: 'young' },
+    { art: '🐸', name: 'frog', ok: ['frog'], age: 'young' },
+    { art: '🦆', name: 'duck', ok: ['duck', 'duckling'], age: 'young' },
+    { art: '🐝', name: 'bee', ok: ['bee', 'honeybee', 'bumblebee'], age: 'young' },
+    { art: '🌳', name: 'tree', ok: ['tree'], age: 'young' },
+    { art: '⭐', name: 'star', ok: ['star'], age: 'young' },
+    { art: '🌙', name: 'moon', ok: ['moon'], age: 'young' },
+    { art: '⛵', name: 'boat', ok: ['boat', 'sailboat', 'ship'], age: 'young' },
+    { art: '🎂', name: 'cake', ok: ['cake', 'birthdaycake'], age: 'young' },
+    { art: '🍎', name: 'apple', ok: ['apple'], age: 'young' },
+    { art: '🚀', name: 'rocket', ok: ['rocket', 'rocketship', 'spaceship'], age: 'all' },
+    { art: '🦖', name: 'dinosaur', ok: ['dinosaur', 'dino', 'trex', 'tyrannosaurus', 'tyrannosaurusrex'], age: 'all' },
+    { art: '🦈', name: 'shark', ok: ['shark'], age: 'all' },
+    { art: '🦉', name: 'owl', ok: ['owl'], age: 'all' },
+    { art: '🦁', name: 'lion', ok: ['lion'], age: 'all' },
+    { art: '🐳', name: 'whale', ok: ['whale'], age: 'all' },
+    { art: '🐙', name: 'octopus', ok: ['octopus'], age: 'older' },
+    { art: '🐉', name: 'dragon', ok: ['dragon'], age: 'older' },
+    { art: '🌋', name: 'volcano', ok: ['volcano'], age: 'older' },
+    { art: '🐢', name: 'turtle', ok: ['turtle', 'tortoise'], age: 'older' },
+    { art: '🏰', name: 'castle', ok: ['castle'], age: 'older' },
+    { art: '🌈', name: 'rainbow', ok: ['rainbow'], age: 'older' },
+    { art: '🤖', name: 'robot', ok: ['robot'], age: 'older' },
+    { art: '🐧', name: 'penguin', ok: ['penguin'], age: 'older' },
+    { art: '🦋', name: 'butterfly', ok: ['butterfly'], age: 'older' },
+    { art: '🐘', name: 'elephant', ok: ['elephant'], age: 'older' }
+  ];
+  const picturesFor = grade => PICTURES.filter(p => p.age === 'all' || p.age === (['K', '1st', '2nd'].includes(grade) ? 'young' : 'older'));
+  const guessKey = s => String(s || '').toLowerCase().replace(/^\s*(a|an|the)\s+/, '').replace(/[^a-z]/g, ''); // "a Race car" -> racecar
+  const pictureMatches = (pic, text) => pic.ok.includes(guessKey(text));
 
-  window.HubContent = { LISTS, listsFor, ABEKA_GRADES, SKILLS, skillsFor, PICTURES };
+  window.HubContent = { LISTS, listsFor, ABEKA_GRADES, SKILLS, skillsFor, PICTURES, picturesFor, pictureMatches, guessKey };
 })();

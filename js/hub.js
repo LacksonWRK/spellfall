@@ -296,7 +296,7 @@
           <div class="subjects">
             <a class="subj" style="--sc:${SUBJECTS.spelling.color}" href="${subjectHref(k, 'spelling')}"><span class="ic">✏️</span><b>Spelling</b><span>${list && list.words ? `${esc(list.title)} · ${list.words.length} words` : 'No list yet'}</span></a>
             <a class="subj" style="--sc:${SUBJECTS.flashcards.color}" href="#/kid/${k.id}/flashcards"><span class="ic">🃏</span><b>Flashcards</b><span>${decks.length ? `${decks.length} deck${decks.length === 1 ? '' : 's'} · ${due} to practice` : 'No decks yet'}</span></a>
-            <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">➗</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} pictures found</span></a>
+            <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">➗</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} picture${k.math.pics === 1 ? '' : 's'} found</span></a>
             <a class="subj" style="--sc:${SUBJECTS.typing.color}" href="${subjectHref(k, 'typing')}"><span class="ic">⌨️</span><b>Typing</b><span>${(() => { const n = ((k.spellfall.typing || {}).unlocked || 0) + 1; return `${n} lesson${n === 1 ? '' : 's'} unlocked`; })()}</span></a>
             <a class="subj" style="--sc:${COLORS.orange}" href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=hidden"><span class="ic">🙈</span><b>Hidden words</b><span>Spell from memory</span></a>
             <a class="subj" style="--sc:${COLORS.blue}" href="#/kid/${k.id}/rocket"><span class="ic">🚀</span><b>Rocket</b><span>${(k.rocket.fuel || 0) >= ROCKET_TANK ? 'Ready to launch!' : `Fuel ${k.rocket.fuel || 0} / ${ROCKET_TANK}`}${k.rocket.best ? ` · record ${k.rocket.best} m` : ''}</span></a>
@@ -440,21 +440,51 @@
   }
   function startDrill(k) {
     const id = S.mathSkill[k.id], sk = C.SKILLS[id]; if (!sk) return;
-    const probs = []; const seen = new Set();
+    const probs = [], seen = new Set(), pics = C.picturesFor(k.grade);
     for (let i = 0; probs.length < 20 && i < 200; i++) { const p = sk.gen(); if (seen.has(p.q) && i < 150) continue; seen.add(p.q); probs.push(p); }
-    S.drill = { kidId: k.id, skill: id, probs, i: 0, right: 0, wrong: 0, miss: [], t0: Date.now(), tries: 0, art: C.PICTURES[Math.floor(Math.random() * C.PICTURES.length)], tiles: shuffle([...Array(20).keys()]), shown: 0, done: false };
+    S.drill = { kidId: k.id, skill: id, probs, i: 0, right: 0, wrong: 0, miss: [], t0: Date.now(), tries: 0, art: pics[Math.floor(Math.random() * pics.length)], tiles: shuffle([...Array(20).keys()]), shown: 0, done: false, guessAt: 3, guessing: false, guessed: false, tried: false };
     store.updateKid(k.id, kk => { kk.math.last = id; });
     renderDrill(k);
   }
   function stopDrill() { if (S.drill && !S.drill.done) S.drill = null; if (S.drill && S.drill.done && !route().includes('math')) S.drill = null; }
-  function picHTML(d) { const off = new Set(d.tiles.slice(0, d.shown)); return `<div class="pic" aria-label="Hidden picture, ${d.shown} of 20 pieces uncovered"><div class="art" aria-hidden="true">${d.art}</div>${[...Array(20).keys()].map(i => `<i class="${off.has(i) ? 'off' : ''}"></i>`).join('')}</div>`; }
+  const PIC_BONUS = 3; // family-goal stars for spelling the hidden picture
+  const uncovered = d => new Set(d.guessed ? d.tiles : d.tiles.slice(0, d.shown));
+  function picHTML(d) { const off = uncovered(d); return `<div class="pic" aria-label="${d.guessed ? `The picture: ${esc(d.art.name)}` : `Hidden picture, ${off.size} of 20 pieces uncovered`}"><div class="art" aria-hidden="true">${d.art.art}</div>${[...Array(20).keys()].map(i => `<i class="${off.has(i) ? 'off' : ''}"></i>`).join('')}</div>`; }
+  function guessRow(d) { // after a wrong guess the button waits for a few more problems
+    if (d.guessed) return `<span class="fine">You spelled it: <b>${esc(d.art.name)}</b>! Finish your problems to collect the bonus.</span>`;
+    const left = d.guessAt - d.i;
+    return `<button class="btn small" data-act="m-guess" ${left > 0 ? 'disabled' : ''}>🔎 I know what it is!</button>${left > 0 ? `<span class="fine">${d.tried ? 'Good try! ' : ''}Solve ${left} more to guess.</span>` : ''}`;
+  }
+  function renderGuess(k) { // spell the hidden picture; the clock waits
+    const d = S.drill, n = esc(d.art.name);
+    app.innerHTML = `<div class="wrap narrow">
+      <div class="spread"><button class="btn ghost small" data-act="m-guess-x">← Back to my problems</button><span class="fine">${esc(C.SKILLS[d.skill].label)}</span></div>
+      ${picHTML(d)}
+      ${d.guessed ? `<h1 class="h2 center">It's the ${n}!</h1>
+        <p class="muted center">You spelled it! When you finish your problems you get a picture found and ${PIC_BONUS} bonus stars.</p>
+        <div class="row" style="justify-content:center"><button class="btn primary big" data-act="m-guess-x">Keep solving</button></div>`
+      : `<h1 class="h2 center">What is the picture? Spell it!</h1>
+        <form class="answer" id="gform" autocomplete="off"><input id="gans" class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="24" aria-label="Spell the picture" placeholder="Type the word"><button class="btn primary" type="submit">Check</button></form>
+        <p class="fine center">Not sure yet? Go back and solve a few more.</p>`}
+    </div>`;
+    if (d.guessed) return stamp($('.pic'), 1500);
+    const inp = $('#gans'); try { inp.focus({ preventScroll: true }); } catch {}
+    $('#gform').onsubmit = e => { e.preventDefault(); checkGuess(k, inp); };
+  }
+  function checkGuess(k, inp) {
+    const d = S.drill; if (!C.guessKey(inp.value)) return;
+    if (C.pictureMatches(d.art, inp.value)) { d.guessed = true; return renderGuess(k); }
+    d.tried = true; d.guessAt = d.i + 3; resumeDrill(k);
+  }
+  function resumeDrill(k) { const d = S.drill; d.guessing = false; d.t0 += Date.now() - d.pausedAt; renderDrill(k); }
   function renderDrill(k) {
     const d = S.drill;
     if (d.done) {
       const secs = Math.round((d.end - d.t0) / 1000), stars = d.right >= 20 ? 3 : d.right >= 16 ? 2 : 1;
       app.innerHTML = `<div class="wrap narrow">
-        <h1 class="h1 center">${d.right === 20 ? 'You found the whole picture!' : `Great work, ${esc(k.name)}!`}</h1>
+        <h1 class="h1 center">${d.right === 20 || d.guessed ? 'You found the whole picture!' : `Great work, ${esc(k.name)}!`}</h1>
         ${picHTML(d)}
+        ${d.guessed ? `<p class="note center">🏆 You spelled it: <b>${esc(d.art.name)}</b>. That's a picture found, plus ${PIC_BONUS} bonus stars!</p>` : d.right === 20 ? `<p class="note center">🏆 It's the ${esc(d.art.name)}. That's a picture found!</p>` : ''}
         <div class="stars-big">${starRow(stars)}</div>
         <div class="res">${d.right}/20</div><p class="muted center">right on the first try · ${secs} seconds${d.isBest ? ' · <b style="color:var(--pink)">new best!</b>' : ''}</p>
         ${d.miss.length ? `<div class="card"><span class="lbl">Practice these</span><div class="wordchips">${d.miss.map(m => `<span class="wchip">${esc(m.q)} = ${esc(m.a)}</span>`).join('')}</div></div>` : ''}
@@ -463,11 +493,13 @@
       if (stars === 3) confetti();
       return;
     }
+    if (d.guessing) return renderGuess(k);
     const p = d.probs[d.i];
     app.innerHTML = `<div class="wrap narrow">
       <div class="spread"><button class="btn ghost small" data-act="m-quit">← Stop</button><span class="fine">${esc(C.SKILLS[d.skill].label)}</span></div>
       <div class="mathbar"><span>Problem <b id="mnum">${d.i + 1}</b> of 20</span><span>✓ <b id="mright">${d.right}</b></span><span id="mclock">${Math.round((Date.now() - d.t0) / 1000)}s</span></div>
       ${picHTML(d)}
+      <div class="guessrow" id="mguess">${guessRow(d)}</div>
       <div class="mathq ${p.q.length > 12 ? 'sm' : ''}" id="mq">${esc(p.q)}${/=|\?|Round/.test(p.q) ? '' : ' ='}</div>
       <form class="answer" id="mform" autocomplete="off"><input id="mans" class="inp" ${C.SKILLS[d.skill].neg ? 'inputmode="text"' : 'inputmode="numeric" pattern="[0-9]*"'} autocomplete="off" aria-label="Answer" placeholder="?"><button class="btn primary" type="submit">Check</button></form>
       <div class="row"><button class="btn small ghost" data-act="m-hear">🔊 Read it to me</button><span class="fine" id="mmsg" aria-live="polite">${d.tries ? 'Not quite. Try once more!' : ''}</span></div>
@@ -479,14 +511,14 @@
   let clockT = 0;
   function tickClock() { clearInterval(clockT); clockT = setInterval(() => { const el = $('#mclock'); if (!el || !S.drill || S.drill.done) return clearInterval(clockT); el.textContent = Math.round((Date.now() - S.drill.t0) / 1000) + 's'; }, 500); }
   function sayProblem(p) { speech.say(p.say || p.q.replace('×', 'times').replace('÷', 'divided by').replace('−', 'minus').replace('+', 'plus'), { rate: .9 }); }
-  function syncPic(d) { const off = new Set(d.tiles.slice(0, d.shown)); $$('.pic i').forEach((el, i) => el.classList.toggle('off', off.has(i))); }
+  function syncPic(d) { const off = uncovered(d); $$('.pic i').forEach((el, i) => el.classList.toggle('off', off.has(i))); }
   function stepDrill(k, d) { // the next problem appears in place: replacing the input from a timer would drop the iPad keyboard
     if (S.drill !== d) return;
     d.busy = false;
     if (d.i >= d.probs.length) return finishDrill(k);
     const p = d.probs[d.i], q = $('#mq'), inp = $('#mans'); if (!q || !inp) return renderDrill(k);
     $('#mnum').textContent = d.i + 1; q.className = `mathq ${p.q.length > 12 ? 'sm' : ''}`; q.textContent = `${p.q}${/=|\?|Round/.test(p.q) ? '' : ' ='}`;
-    inp.value = ''; inp.classList.remove('bad'); $('#mmsg').textContent = '';
+    inp.value = ''; inp.classList.remove('bad'); $('#mmsg').textContent = ''; $('#mguess').innerHTML = guessRow(d);
   }
   function answerDrill(k, inp) {
     const d = S.drill, p = d.probs[d.i], v = inp.value.replace(/[^0-9-]/g, '');
@@ -509,9 +541,9 @@
     store.updateKid(k.id, kk => {
       const b = kk.math.best[d.skill];
       if (!b || d.right > b.right || (d.right === b.right && secs < b.secs)) { kk.math.best[d.skill] = { right: d.right, secs }; d.isBest = !!b; }
-      if (d.right === 20) kk.math.pics = (kk.math.pics || 0) + 1;
+      if (d.right === 20 || d.guessed) kk.math.pics = (kk.math.pics || 0) + 1;
     });
-    store.log(k.id, { subject: 'math', skill: d.skill, score: d.right, total: 20, secs, points: Math.round(d.right / 2) });
+    store.log(k.id, { subject: 'math', skill: d.skill, score: d.right, total: 20, secs, points: Math.round(d.right / 2) + (d.guessed ? PIC_BONUS : 0) });
     renderDrill(k);
   }
 
@@ -777,6 +809,8 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
       case 'm-go': case 'm-again': { const k = k0(); S.drill = null; startDrill(k); break; }
       case 'm-menu': { const k = k0(); S.drill = null; renderMath(k); break; }
       case 'm-quit': { const k = k0(); clearInterval(clockT); S.drill = null; renderMath(k); break; }
+      case 'm-guess': { const d = S.drill, k = k0(); if (!d || d.busy || !k) return; d.guessing = true; d.pausedAt = Date.now(); renderDrill(k); break; }
+      case 'm-guess-x': { const k = k0(); if (k && S.drill) resumeDrill(k); break; }
       case 'm-hear': { const d = S.drill; if (d) sayProblem(d.probs[d.i]); try { $('#mans').focus(); } catch {} break; }
       case 'p-tab': S.ptab = el.dataset.id; S.review = null; render(); break;
       case 'p-kid': S.pkid = el.dataset.id; S.review = null; render(); break;
