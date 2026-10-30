@@ -209,6 +209,15 @@
   };
   if (speech.ok) { try { speechSynthesis.onvoiceschanged = () => speech.pick(); speech.pick(); } catch {} }
 
+  /* ---------- the "Correct!" stamp: chalk across a card or answer, then gone. Seen, never spoken. ---------- */
+  function stamp(host, ms = 900) {
+    if (!host) return;
+    const s = document.createElement('div');
+    s.className = 'stamp'; s.setAttribute('role', 'status'); s.textContent = 'Correct!'; s.style.animationDuration = ms + 'ms';
+    host.classList.add('stamp-host'); host.appendChild(s);
+    setTimeout(() => s.remove(), ms);
+  }
+
   /* ---------- PIN (a kid deterrent, not real security) ---------- */
   async function sha(text) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -221,5 +230,5 @@
     clear() { store.family.settings.pinHash = null; store.family.settings.pinSalt = null; store.save(); }
   };
 
-  window.Hub = { store, ai, speech, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_EMAIL, ROCKET_TANK };
+  window.Hub = { store, ai, speech, stamp, pin, uid, clone, today, mondayOf, VERSION, FEEDBACK_EMAIL, ROCKET_TANK };
 })();

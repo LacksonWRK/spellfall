@@ -272,6 +272,10 @@ table.games td,table.games th{padding:7px 8px;border-bottom:1px solid var(--chal
 .hw-word{position:relative;font-weight:700;color:var(--ink);line-height:1;transform:translateY(.2em);transition:filter .8s ease,opacity .8s ease,color .3s;white-space:nowrap}
 .hw-word.hidden{filter:blur(18px);opacity:.4}
 .hw-word.right{color:var(--good)}
+.stamp-host{position:relative}
+.stamp{position:absolute;left:50%;top:50%;z-index:5;transform:translate(-50%,-50%) rotate(-7deg);padding:.04em .34em .1em;border:5px solid var(--good);border-radius:var(--chalk-r);background:rgba(251,250,243,.95);color:var(--good);font-family:var(--f-display);font-weight:700;font-size:clamp(46px,9vw,84px);line-height:1;white-space:nowrap;pointer-events:none;box-shadow:0 8px 22px rgba(0,0,0,.28);animation:stamp 900ms ease-out both}
+@keyframes stamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-7deg) scale(1.7)}16%{opacity:1;transform:translate(-50%,-50%) rotate(-7deg) scale(.95)}24%{transform:translate(-50%,-50%) rotate(-7deg) scale(1)}84%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(-7deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.stamp{animation:none}}
 #hw-cv{position:absolute;left:-24px;top:-24px;width:calc(100% + 48px);height:calc(100% + 48px);pointer-events:none}
 .hw-timer{height:6px;margin-top:14px;border-radius:3px;background:rgba(38,48,58,.12);overflow:hidden}
 .hw-timer i{display:block;height:100%;background:var(--yellow);transform-origin:left center}
@@ -1045,7 +1049,7 @@ function checkHidden() {
     el.classList.add('right'); G.hs = 'right';
     renderDiff(a.letters, c.word);
     setMsg(`${c.tries ? 'You got it this time!' : ['Yes! That’s right.', 'Perfect spelling!', 'You got it!', 'Great memory!'][G.done % 4]}  +${pts}`);
-    Sfx.pop(G.streak); hwTools([]);
+    Sfx.pop(G.streak); hwTools([]); HUB.stamp($('#hw-card'), 1400);
   } else {
     c.tries++; G.streak = 0; stat(k, 'oops');
     if (c.tries >= 3) { stat(k, 'miss'); G.done++; G.results.push({ word:c.word, tries:c.tries, ok:false }); }
