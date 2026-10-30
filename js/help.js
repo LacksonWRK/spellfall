@@ -106,10 +106,19 @@
       </ul>
       <p>A first-try answer counts toward the stars. A finished game checks off a Today item linked to <b>Phonics</b>. To add one, see <a href="#/help/today">Today checklist</a>.</p>` },
 
-    { id: 'rocket', icon: '🚀', title: 'Spell-a-Rocket', sub: 'Spelling fuels a launch', body: `
-      <p>Every word your child spells right in the spelling game or hidden words adds one unit of fuel. The results screen shows how much they earned. The tank holds 25.</p>
-      <p>When the tank is full, the <b>Rocket</b> tile on their page says <b>Ready to launch!</b> A needle swings across a power meter. Tapping <b>Launch</b> while it’s in the green gives the most thrust and the straightest flight.</p>
-      <p>The flight uses real thrust, gravity and air drag. Its highest point is the score, and the best one is your child’s record to beat. A launch uses the whole tank, so it’s back to spelling to refuel.</p>` },
+    { id: 'rocket', icon: '🚀', title: 'Spell-a-Rocket', sub: 'Spelling fuels a flight', body: `
+      <p>Every word your child spells right in the spelling game or hidden words adds one unit of fuel. The results screen shows how much they earned. 25 fuel fills a tank, and tanks stack: 50 is two tanks, 75 is three, up to 20 tanks.</p>
+      <p>With a full tank, the <b>Rocket</b> tile says <b>Ready to launch!</b> A launch burns everything saved, so your child chooses: fly now, or keep spelling for a bigger flight. One tank reaches about the edge of space. Three or four can reach the Moon.</p>
+      <p>Before liftoff a needle swings across a power meter. Tapping <b>Launch</b> while it’s in the green gives the strongest start.</p>
+      <h3>Flying</h3>
+      <ul>
+        <li><b>Steer</b> by sliding a finger or tapping where the rocket should go. Arrow keys work on a keyboard.</li>
+        <li><b>Catch the little rockets</b> for more fuel, so the flight keeps going.</li>
+        <li><b>Bumps</b> from birds, clouds, planes, satellites and space rocks slow the rocket and cost a little fuel. A bump never ends the flight.</li>
+        <li>When the fuel runs out the rocket coasts to a stop, then floats home on a parachute.</li>
+      </ul>
+      <p>The highest point is the score, and the best one is your child’s record to beat. A dashed line marks the record in the sky. One tank takes about 30 to 45 seconds, and more tanks take longer. Fuel earned in flight lasts for that flight only, so it’s back to spelling to refuel.</p>
+      <p>The pause button can stop a flight or land early. Leaving mid-flight keeps the height reached so far, but the fuel is still used. With Reduce Motion turned on in the device’s settings, a launch skips the flight and shows the result.</p>` },
 
     { id: 'lists', icon: '📝', title: 'Spelling lists', sub: 'Typed, built-in, or scanned', body: `
       <p>Each child has one list for the week. Setting a new one moves the old list to <b>Past weeks</b>, with its scores.</p>

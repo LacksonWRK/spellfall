@@ -299,7 +299,7 @@
             <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">➗</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} pictures found</span></a>
             <a class="subj" style="--sc:${SUBJECTS.typing.color}" href="${subjectHref(k, 'typing')}"><span class="ic">⌨️</span><b>Typing</b><span>${(() => { const n = ((k.spellfall.typing || {}).unlocked || 0) + 1; return `${n} lesson${n === 1 ? '' : 's'} unlocked`; })()}</span></a>
             <a class="subj" style="--sc:${COLORS.orange}" href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=hidden"><span class="ic">🙈</span><b>Hidden words</b><span>Spell from memory</span></a>
-            <a class="subj" style="--sc:${COLORS.blue}" href="#/kid/${k.id}/rocket"><span class="ic">🚀</span><b>Rocket</b><span>${(k.rocket.fuel || 0) >= ROCKET_TANK ? 'Ready to launch!' : `Fuel ${k.rocket.fuel || 0} / ${ROCKET_TANK}`}${k.rocket.best ? ` · record ${k.rocket.best} m` : ''}</span></a>
+            <a class="subj" style="--sc:${COLORS.blue}" href="#/kid/${k.id}/rocket"><span class="ic">🚀</span><b>Rocket</b><span>${(k.rocket.fuel || 0) >= ROCKET_TANK * 2 ? `${Math.floor(k.rocket.fuel / ROCKET_TANK)} tanks ready!` : (k.rocket.fuel || 0) >= ROCKET_TANK ? 'Ready to launch!' : `Fuel ${k.rocket.fuel || 0} / ${ROCKET_TANK}`}${k.rocket.best ? ` · record ${window.HubRocket.fmt(k.rocket.best)}` : ''}</span></a>
             <a class="subj" style="--sc:${SUBJECTS.phonics.color}" href="#/kid/${k.id}/phonics"><span class="ic">🔤</span><b>Phonics</b><span>Sound Sort · Blend Builder · Magic-e</span></a>
           </div>
           ${meterHTML()}
