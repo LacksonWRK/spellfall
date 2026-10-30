@@ -889,7 +889,7 @@ function startGame(opts = {}) {
   inp.value = ''; try { inp.focus({ preventScroll:true }); } catch { inp.focus(); }
   P.length = 0;
   Object.assign(G, {
-    state:'countdown', p, s, pid:p.id, mode: FACTS[mode] ? 'spell' : mode, src: FACTS[mode] ? mode : null, ans:{}, cards:{}, missedItems:[], lesson, lidx, vmode: lesson || FACTS[mode] ? 'visible' : s.mode,
+    state:'countdown', p, s, pid:p.id, mode: FACTS[mode] ? 'spell' : mode, src: FACTS[mode] ? mode : null, ans:{}, say:{}, cards:{}, missedItems:[], lesson, lidx, vmode: lesson || FACTS[mode] ? 'visible' : s.mode,
     theme:THEMES[p.theme] ? p.theme : 'space', words: lesson || FACTS[mode] ? [] : p.list.words.slice(), listId: lesson || FACTS[mode] ? null : p.list.id,
     objs:[], floats:[], banner:null, t:0, score:0, level:1, spelled:0, fails:0, done:0, spawned:0, total: lesson ? lessonTotal(lesson) : Infinity,
     streak:0, bestStreak:0, typed:'', typedRaw:'', prevLen:0, target:null, completed:false,
@@ -1168,7 +1168,7 @@ function buildBagType() {
 function buildBagFacts() {
   if (G.src === 'math') {
     const sk = mathSkills(G.p), out = [];
-    for (let i = 0; i < 12; i++) { const pr = sk[Math.floor(Math.random() * sk.length)].gen(); G.ans[pr.q] = String(pr.a); out.push(pr.q); }
+    for (let i = 0; i < 12; i++) { const pr = sk[Math.floor(Math.random() * sk.length)].gen(); G.ans[pr.q] = String(pr.a); G.say[pr.q] = window.HubContent.sayText(pr); out.push(pr.q); }
     return out;
   }
   const cards = flashCards(G.p), due = cards.filter(c => (c.box || 0) < 2);
@@ -1184,9 +1184,10 @@ function factLabel(o) {
   if (G.src === 'math') return `${o.word} = ${n ? G.typed : '?'}`;
   return [...o.word].map((c, i) => c === ' ' ? ' ' : i < n ? c : '_').join(' ');
 }
+const spoken = o => (G.src === 'math' && G.say[o.word]) || o.word; // a math rock reads as "7 times 8"
 function factSpawned(o) {
   if (G.src === 'flash') { G.clue = o.card; const el = $('#fclue'); el.textContent = o.card.q.replace(/_{2,}/g, '_____'); el.hidden = false; G.clueY = el.offsetTop + el.offsetHeight + G.fs * .9; if (G.s.speak || G.young) Speech.say(o.card.q.replace(/_{2,}/g, ' blank '), { rate:.85 }); }
-  else if (G.s.speak) Speech.say(o.word.replace(/×/g, 'times').replace(/÷/g, 'divided by').replace(/−/g, 'minus').replace(/²/g, ' squared'), { rate:.9 });
+  else if (G.s.speak) Speech.say(spoken(o), { rate:.9 });
 }
 const makeBag = () => G.src ? buildBagFacts() : G.mode === 'type' ? buildBagType() : buildBag();
 function nextWord() {
@@ -1250,7 +1251,7 @@ function fail(o) {
   if (G.mode === 'type') { const d = (G.target === o && G.typed && o.key.startsWith(G.typed)) ? [...G.typed].length : 0; const rest = [...o.key].slice(d); G.tk.missed += rest.length; rest.forEach(c => kstat(c, 'miss')); }
   G.done++;
   G.objs.splice(G.objs.indexOf(o), 1); if (G.src === 'flash') $('#fclue').hidden = true;
-  if (G.src) G.missedItems.push(G.src === 'math' ? `${o.word} = ${G.ans[o.word]}` : o.word);
+  if (G.src) G.missedItems.push(G.src === 'math' ? window.HubContent.solvedText({ q:o.word, a:G.ans[o.word] }) : o.word);
   G.fails++; G.streak = 0; stat(o.key, 'miss');
   THEMES[G.theme].miss(x, GY); Sfx.miss(); if (!RM) G.shake = .35;
   ctx.font = `700 ${G.fs * .9}px ${FONT}`;
@@ -1292,7 +1293,7 @@ function submit() {
   const close = G.objs.map(o => [o, lev(v, o.key)]).sort((a, b) => a[1] - b[1] || b[0].p - a[0].p)[0];
   if (close) { const o = close[0]; stat(o.key, 'oops'); o.peekUntil = G.t + 1.6; G.floats.push({ text:'Almost! Check it', x:objX(o), y:objY(o) - G.fs * 1.4, life:0, max:1.2, color:'#FFE3A3', size:G.fs * .6 }); }
 }
-function repeatWord() { const o = G.objs.slice().sort((a, b) => b.p - a.p)[0]; if (o) Speech.say(o.word, { rate:G.young ? .75 : .85, interrupt:true }); }
+function repeatWord() { const o = G.objs.slice().sort((a, b) => b.p - a.p)[0]; if (o) Speech.say(spoken(o), { rate:G.young ? .75 : .85, interrupt:true }); }
 
 inp.addEventListener('input', onType);
 inp.addEventListener('animationend', () => inp.classList.remove('bad'));
@@ -1317,7 +1318,7 @@ cv.addEventListener('pointerdown', e => {
   if (G.state === 'play') {
     const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     const o = G.objs.find(o => o.box && x >= o.box.x - 10 && x <= o.box.x + o.box.w + 10 && y >= o.box.y - 10 && y <= o.box.y + o.box.h + 10);
-    if (o) Speech.say(o.word, { rate:G.young ? .75 : .85, interrupt:true });
+    if (o) Speech.say(spoken(o), { rate:G.young ? .75 : .85, interrupt:true });
   }
   if (G.state === 'play' || G.state === 'countdown') { try { inp.focus({ preventScroll:true }); } catch {} }
 });

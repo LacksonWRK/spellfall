@@ -485,6 +485,10 @@
     d.tried = true; d.guessAt = d.i + 3; resumeDrill(k);
   }
   function resumeDrill(k) { const d = S.drill; d.guessing = false; d.t0 += Date.now() - d.pausedAt; renderDrill(k); }
+  const mathqClass = t => `mathq ${t.length > 12 ? 'sm' : ''}`;
+  // the chalk font has no minus sign or small digits, so draw a dash and real superscripts in it
+  const mathHTML = t => esc(t).replace(/−/g, '–').replace(/\^\?/g, '<sup>?</sup>').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, c => `<sup>${C.SUPERS.indexOf(c)}</sup>`);
+  function showWorked(p) { const q = $('#mq'), t = C.solvedText(p); q.className = mathqClass(t); q.innerHTML = mathHTML(t); }
   function renderDrill(k) {
     const d = S.drill;
     if (d.done) {
@@ -495,7 +499,7 @@
         ${d.guessed ? `<p class="note center">🏆 You spelled it: <b>${esc(d.art.name)}</b>. That's a picture found, plus ${PIC_BONUS} bonus stars!</p>` : d.right === 20 ? `<p class="note center">🏆 It's the ${esc(d.art.name)}. That's a picture found!</p>` : ''}
         <div class="stars-big">${starRow(stars)}</div>
         <div class="res">${d.right}/20</div><p class="muted center">right on the first try · ${secs} seconds${d.isBest ? ' · <b style="color:var(--pink)">new best!</b>' : ''}</p>
-        ${d.miss.length ? `<div class="card"><span class="lbl">Practice these</span><div class="wordchips">${d.miss.map(m => `<span class="wchip">${esc(m.q)} = ${esc(m.a)}</span>`).join('')}</div></div>` : ''}
+        ${d.miss.length ? `<div class="card"><span class="lbl">Practice these</span><div class="wordchips">${d.miss.map(m => `<span class="wchip">${esc(C.solvedText(m))}</span>`).join('')}</div></div>` : ''}
         <div class="row" style="justify-content:center"><button class="btn primary big" data-act="m-again">Again</button><button class="btn ghost" data-act="m-menu">Pick another</button><a class="btn ghost" href="#/kid/${k.id}">Done</a></div>
       </div>`;
       if (stars === 3) confetti();
@@ -508,8 +512,8 @@
       <div class="mathbar"><span>Problem <b id="mnum">${d.i + 1}</b> of 20</span><span>✓ <b id="mright">${d.right}</b></span><span id="mclock">${Math.round((Date.now() - d.t0) / 1000)}s</span></div>
       ${picHTML(d)}
       <div class="guessrow" id="mguess">${guessRow(d)}</div>
-      <div class="mathq ${p.q.length > 12 ? 'sm' : ''}" id="mq">${esc(p.q)}${/=|\?|Round/.test(p.q) ? '' : ' ='}</div>
-      <form class="answer" id="mform" autocomplete="off"><input id="mans" class="inp" ${C.SKILLS[d.skill].neg ? 'inputmode="text"' : 'inputmode="numeric" pattern="[0-9]*"'} autocomplete="off" aria-label="Answer" placeholder="?"><button class="btn primary" type="submit">Check</button></form>
+      <div class="${mathqClass(p.q)}" id="mq">${mathHTML(C.problemText(p))}</div>
+      <form class="answer" id="mform" autocomplete="off" novalidate><input id="mans" class="inp" ${C.SKILLS[d.skill].neg ? 'inputmode="text"' : 'inputmode="numeric" pattern="[0-9]*"'} autocomplete="off" aria-label="Answer" placeholder="?"><button class="btn primary" type="submit">Check</button></form>
       <div class="row"><button class="btn small ghost" data-act="m-hear">🔊 Read it to me</button><span class="fine" id="mmsg" aria-live="polite">${d.tries ? 'Not quite. Try once more!' : ''}</span></div>
     </div>`;
     const inp = $('#mans'); try { inp.focus({ preventScroll: true }); } catch {}
@@ -518,28 +522,28 @@
   }
   let clockT = 0;
   function tickClock() { clearInterval(clockT); clockT = setInterval(() => { const el = $('#mclock'); if (!el || !S.drill || S.drill.done) return clearInterval(clockT); el.textContent = Math.round((Date.now() - S.drill.t0) / 1000) + 's'; }, 500); }
-  function sayProblem(p) { speech.say(p.say || p.q.replace('×', 'times').replace('÷', 'divided by').replace('−', 'minus').replace('+', 'plus'), { rate: .9 }); }
+  function sayProblem(p) { speech.say(C.sayText(p), { rate: .9 }); }
   function syncPic(d) { const off = uncovered(d); $$('.pic i').forEach((el, i) => el.classList.toggle('off', off.has(i))); }
   function stepDrill(k, d) { // the next problem appears in place: replacing the input from a timer would drop the iPad keyboard
     if (S.drill !== d) return;
     d.busy = false;
     if (d.i >= d.probs.length) return finishDrill(k);
     const p = d.probs[d.i], q = $('#mq'), inp = $('#mans'); if (!q || !inp) return renderDrill(k);
-    $('#mnum').textContent = d.i + 1; q.className = `mathq ${p.q.length > 12 ? 'sm' : ''}`; q.textContent = `${p.q}${/=|\?|Round/.test(p.q) ? '' : ' ='}`;
+    $('#mnum').textContent = d.i + 1; q.className = mathqClass(p.q); q.innerHTML = mathHTML(C.problemText(p));
     inp.value = ''; inp.classList.remove('bad'); $('#mmsg').textContent = ''; $('#mguess').innerHTML = guessRow(d);
   }
   function answerDrill(k, inp) {
-    const d = S.drill, p = d.probs[d.i], v = inp.value.replace(/[^0-9-]/g, '');
-    if (v === '' || d.busy) return;
+    const d = S.drill, p = d.probs[d.i], v = inp.value.replace(/[−–—]/g, '-').replace(/[^0-9-]/g, '');
+    if (v === '' || v === '-' || d.busy) return;
     if (+v === p.a) {
       if (d.tries === 0) { d.right++; d.shown++; } else d.miss.push(p);
       d.i++; d.tries = 0; d.busy = true; d.t0 += DRILL_MS; // the stamp's pause doesn't count against their time
-      $('#mright').textContent = d.right; syncPic(d);
+      $('#mright').textContent = d.right; syncPic(d); showWorked(p);
       stamp($('#mq'), DRILL_MS);
       setTimeout(() => stepDrill(k, d), DRILL_MS);
     } else {
       d.tries++;
-      if (d.tries >= 2) { d.miss.push(p); d.wrong++; d.busy = true; $('#mmsg').textContent = `It's ${p.a}. Let's keep going!`; speech.say(`The answer is ${p.a}`, { rate: .9 }); d.i++; d.tries = 0; setTimeout(() => stepDrill(k, d), 1600); return; }
+      if (d.tries >= 2) { d.miss.push(p); d.wrong++; d.busy = true; showWorked(p); $('#mmsg').textContent = `It's ${String(p.a).replace('-', '−')}. Let's keep going!`; speech.say(`The answer is ${p.a}`, { rate: .9 }); d.i++; d.tries = 0; setTimeout(() => stepDrill(k, d), 1600); return; }
       inp.value = ''; inp.classList.remove('bad'); void inp.offsetWidth; inp.classList.add('bad'); $('#mmsg').textContent = 'Not quite. Try once more!';
     }
   }
