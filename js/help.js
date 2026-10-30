@@ -131,7 +131,7 @@
     { id: 'flashcards', icon: '🃏', title: 'Flashcards', sub: 'Climb the tower', body: `
       <p>Flashcards are fill-in-the-blank sentences. Cards climb a tower as your child learns them: <b>🪨 Stones</b> (new), <b>🪜 Stairs</b> (getting it), <b>⭐ Stars</b> (learned).</p>
       <ul>
-        <li>Right on the first try moves a card up. A miss sends it back to the Stones.</li>
+        <li>A right answer stamps <b>Correct!</b> and the next card comes by itself. Right on the first try moves a card up. A miss sends it back to the Stones.</li>
         <li>After a miss your child gets a hint (the letter count, then the first letter). After three misses, or <b>Show me</b>, the answer appears and they type it once.</li>
         <li><b>Read it to me</b> reads the card aloud. Cards read themselves for K–2nd grade.</li>
         <li>Each practice is up to 12 cards: the new ones and the ones still climbing.</li>
@@ -145,7 +145,7 @@
       <p><b>Falling flashcards</b>: on the Flashcards screen tap <b>Falling flashcards</b>, or choose <b>Flashcards</b> in the spelling game. A clue shows at the top and its answer falls as blanks; your child types it before it lands. It’s for practice and doesn’t move cards up the tower.</p>
       <p>No scanning? Tap <b>Type cards</b> to make them by hand. Each deck can be edited, restarted from the Stones, or deleted.</p>` },
 
-    { id: 'math', icon: '➗', title: 'Math facts', sub: '20-problem drills with a hidden picture', body: `
+    { id: 'math', icon: '🧮', title: 'Math facts', sub: '20-problem drills with a hidden picture', body: `
       <p>Your child picks a skill and answers 20 problems. Each right answer uncovers part of a hidden picture.</p>
       <ul>
         <li>A wrong answer gets one more try. After that the answer is shown and the drill moves on.</li>

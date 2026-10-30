@@ -22,7 +22,7 @@
   const SUBJECTS = {
     spelling: { label: 'Spelling', icon: '✏️', color: COLORS.yellow },
     flashcards: { label: 'Flashcards', icon: '🃏', color: COLORS.blue },
-    math: { label: 'Math', icon: '➗', color: COLORS.green },
+    math: { label: 'Math', icon: '🧮', color: COLORS.green },
     typing: { label: 'Typing', icon: '⌨️', color: COLORS.lilac },
     phonics: { label: 'Phonics', icon: '🔤', color: COLORS.pink }
   };
@@ -296,7 +296,7 @@
           <div class="subjects">
             <a class="subj" style="--sc:${SUBJECTS.spelling.color}" href="${subjectHref(k, 'spelling')}"><span class="ic">✏️</span><b>Spelling</b><span>${list && list.words ? `${esc(list.title)} · ${list.words.length} words` : 'No list yet'}</span></a>
             <a class="subj" style="--sc:${SUBJECTS.flashcards.color}" href="#/kid/${k.id}/flashcards"><span class="ic">🃏</span><b>Flashcards</b><span>${decks.length ? `${decks.length} deck${decks.length === 1 ? '' : 's'} · ${due} to practice` : 'No decks yet'}</span></a>
-            <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">➗</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} picture${k.math.pics === 1 ? '' : 's'} found</span></a>
+            <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">🧮</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} picture${k.math.pics === 1 ? '' : 's'} found</span></a>
             <a class="subj" style="--sc:${SUBJECTS.typing.color}" href="${subjectHref(k, 'typing')}"><span class="ic">⌨️</span><b>Typing</b><span>${(() => { const n = ((k.spellfall.typing || {}).unlocked || 0) + 1; return `${n} lesson${n === 1 ? '' : 's'} unlocked`; })()}</span></a>
             <a class="subj" style="--sc:${COLORS.orange}" href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=hidden"><span class="ic">🙈</span><b>Hidden words</b><span>Spell from memory</span></a>
             <a class="subj" style="--sc:${COLORS.blue}" href="#/kid/${k.id}/rocket"><span class="ic">🚀</span><b>Rocket</b><span>${(k.rocket.fuel || 0) >= ROCKET_TANK ? 'Ready to launch!' : `Fuel ${k.rocket.fuel || 0} / ${ROCKET_TANK}`}${k.rocket.best ? ` · record ${k.rocket.best} m` : ''}</span></a>
@@ -307,6 +307,9 @@
       </div>
     </div>`;
   }
+
+  // tapping Check takes focus off the input; taking it back inside the tap keeps the iPad keyboard up for the next problem
+  function keepFocus(inp) { try { inp.focus({ preventScroll: true }); } catch {} }
 
   /* ---------- flashcards: decks ---------- */
   const BOX = [{ ic: '🪨', name: 'Stones', sub: 'new' }, { ic: '🪜', name: 'Stairs', sub: 'getting it' }, { ic: '⭐', name: 'Stars', sub: 'learned' }];
@@ -322,7 +325,7 @@
       ${all.length ? `<p class="muted">Climb the tower! Get a card right and it moves up. Stars are cards you know.</p>${towerHTML(all)}<p class="fine">Or play <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=flash">☄️ Falling flashcards</a>: read the clue, type the answer before it lands.</p>` : ''}
       ${decks.length ? decks.map(d => {
         const left = d.cards.filter(c => (c.box || 0) < 2).length;
-        return `<div class="deckrow"><div><b>${esc(d.title)}</b><small>${d.cards.length} cards · ${left ? `${left} still climbing` : 'all stars!'}${d.subject ? ' · ' + esc(d.subject) : ''}</small></div><a class="btn primary" href="#/kid/${k.id}/flashcards/${d.id}">${left ? 'Practice' : 'Review'}</a></div>`;
+        return `<div class="deckrow"><div><b>${esc(d.title)}</b><small>${d.cards.length} card${d.cards.length === 1 ? '' : 's'} · ${left ? `${left} still climbing` : 'all stars!'}${d.subject ? ' · ' + esc(d.subject) : ''}</small></div><a class="btn primary" href="#/kid/${k.id}/flashcards/${d.id}">${left ? 'Practice' : 'Review'}</a></div>`;
       }).join('') : `<div class="card"><p class="h3">No flashcards yet</p><p class="muted">Ask a grown-up to snap a photo of a quiz or study sheet. Press and hold the Parents button.</p></div>`}
     </div>`;
   }
@@ -360,13 +363,13 @@
       <div class="pbar"><i style="width:${pct}%"></i></div>
       <div class="study">
         <div class="fcard">${card}</div>
-        <form class="answer" id="ansform" autocomplete="off"><input id="ans" class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type the missing word" aria-label="Your answer"><button class="btn primary" type="submit" id="st-go">${label}</button></form>
+        <form class="answer" id="ansform" autocomplete="off"><input id="ans" class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type the answer" aria-label="Your answer"><button class="btn primary" type="submit" id="st-go">${label}</button></form>
         <div class="row" id="st-tools">${tools}</div>
       </div></div>`;
       inp = $('#ans');
     }
     try { inp.focus({ preventScroll: true }); } catch {}
-    $('#ansform').onsubmit = e => { e.preventDefault(); checkCard(k, d, c, inp); };
+    $('#ansform').onsubmit = e => { e.preventDefault(); keepFocus(inp); checkCard(k, d, c, inp); };
     if (young(k) && st.tries === 0 && !st.revealed && !st.spoke) { st.spoke = true; setTimeout(() => readCard(c), 300); }
   }
   function readCard(c) { speech.say(String(c.q).replace(/_{2,}/g, ' blank '), { rate: .85 }); }
@@ -422,6 +425,7 @@
       ${towerHTML(dd.cards)}
       <div class="row" style="justify-content:center"><button class="btn primary big" data-act="fc-again">Go again</button><a class="btn ghost" href="#/kid/${k.id}">Done</a></div>
     </div>`;
+    window.scrollTo(0, 0);
     if (stars === 3) confetti();
   }
 
@@ -441,7 +445,7 @@
     app.innerHTML = `<div class="wrap narrow">
       <a class="btn ghost small back" href="#/kid/${k.id}">← ${esc(k.name)}</a>
       <h1 class="h1">Math facts</h1>
-      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture.${C.fallingFor(k).length ? ` Or try <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=math">☄️ Falling Facts</a>: problems fall and you type the answer.` : ''}</p>
+      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture. Spot what it is and spell it for a bonus!${C.fallingFor(k).length ? ` Or try <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=math">☄️ Falling Facts</a>: problems fall and you type the answer.` : ''}</p>
       <div class="skills">${skills.map(s => { const b = k.math.best[s.id]; return `<button class="skill" data-act="m-skill" data-id="${s.id}" aria-pressed="${s.id === sel}"><b>${esc(s.label)}</b><span>${b ? `Best: ${b.right}/20 in ${b.secs}s` : 'New!'}</span></button>`; }).join('')}</div>
       <div class="row"><button class="btn primary big" data-act="m-go" ${sel ? '' : 'disabled'}>Start</button></div>
     </div>`;
@@ -502,6 +506,7 @@
         ${d.miss.length ? `<div class="card"><span class="lbl">Practice these</span><div class="wordchips">${d.miss.map(m => `<span class="wchip">${esc(C.solvedText(m))}</span>`).join('')}</div></div>` : ''}
         <div class="row" style="justify-content:center"><button class="btn primary big" data-act="m-again">Again</button><button class="btn ghost" data-act="m-menu">Pick another</button><a class="btn ghost" href="#/kid/${k.id}">Done</a></div>
       </div>`;
+      window.scrollTo(0, 0);
       if (stars === 3) confetti();
       return;
     }
@@ -517,7 +522,7 @@
       <div class="row"><button class="btn small ghost" data-act="m-hear">🔊 Read it to me</button><span class="fine" id="mmsg" aria-live="polite">${d.tries ? 'Not quite. Try once more!' : ''}</span></div>
     </div>`;
     const inp = $('#mans'); try { inp.focus({ preventScroll: true }); } catch {}
-    $('#mform').onsubmit = e => { e.preventDefault(); answerDrill(k, inp); };
+    $('#mform').onsubmit = e => { e.preventDefault(); keepFocus(inp); answerDrill(k, inp); };
     tickClock();
   }
   let clockT = 0;
@@ -530,7 +535,7 @@
     if (d.i >= d.probs.length) return finishDrill(k);
     const p = d.probs[d.i], q = $('#mq'), inp = $('#mans'); if (!q || !inp) return renderDrill(k);
     $('#mnum').textContent = d.i + 1; q.className = mathqClass(p.q); q.innerHTML = mathHTML(C.problemText(p));
-    inp.value = ''; inp.classList.remove('bad'); $('#mmsg').textContent = ''; $('#mguess').innerHTML = guessRow(d);
+    inp.value = ''; inp.classList.remove('bad'); $('#mmsg').textContent = ''; $('#mguess').innerHTML = guessRow(d); keepFocus(inp);
   }
   function answerDrill(k, inp) {
     const d = S.drill, p = d.probs[d.i], v = inp.value.replace(/[−–—]/g, '-').replace(/[^0-9-]/g, '');
@@ -776,7 +781,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     const p = store.family.plan;
     return `<section class="card"><div class="spread"><h2 class="h3">Daily checklist</h2><a class="btn small ghost" href="#/parent/print/all">🖨 Print weekly pages</a></div>
       <p class="muted">Every child sees this list on their Today page. Items linked to a subject check themselves off when a session is finished. Others the child taps when done.</p>
-      <div class="col" style="gap:10px">${p.template.map((it, i) => `<div class="two" style="grid-template-columns:minmax(0,1fr) 180px 42px;align-items:center">
+      <div class="col" style="gap:10px">${p.template.map((it, i) => `<div class="two" style="grid-template-columns:minmax(0,1fr) 180px 44px;align-items:center">
         <input class="inp" data-plabel="${i}" value="${esc(it.label)}" maxlength="40" aria-label="Item ${i + 1}">
         <select class="inp" data-psubj="${i}" aria-label="Links to"><option value="">Tick by hand</option>${Object.entries(SUBJECTS).map(([id, s]) => `<option value="${id}" ${it.subject === id ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select>
         <button class="x" data-act="pl-del" data-i="${i}" aria-label="Remove item">×</button></div>`).join('')}</div>

@@ -133,6 +133,7 @@
       <p class="muted center">${name}: ${G.right} of ${ROUND} right on the first try</p>
       <div class="row" style="justify-content:center"><button class="btn primary big" data-ph="again">Again</button><a class="btn ghost" href="#/kid/${k.id}/phonics">Other games</a><a class="btn ghost" href="#/kid/${k.id}">Done</a></div>
     </div>`;
+    window.scrollTo(0, 0);
   }
 
   document.addEventListener('click', e => {

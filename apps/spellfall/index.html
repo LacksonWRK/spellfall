@@ -886,6 +886,7 @@ function startGame(opts = {}) {
   const lesson = mode === 'type' ? LESSONS[lidx] : null;
   Sfx.init(); Speech.unlock();
   show('game');
+  inp.inputMode = mode === 'math' && !mathSkills(p).some(sk => sk.neg) ? 'numeric' : 'text'; // the number keys for math
   inp.value = ''; try { inp.focus({ preventScroll:true }); } catch { inp.focus(); }
   P.length = 0;
   Object.assign(G, {
