@@ -13,6 +13,9 @@ It's a plain static website, with no accounts, no server, and no build step. Eve
 | **Typing** | 24 lessons from home row to sentences, with a finger guide. |
 | **Flashcards** | Fill-in-the-blank cards. Kids "climb the tower": 🪨 Stones (new), 🪜 Stairs (getting it), ⭐ Stars (learned). Includes hints, read-aloud, and retry. |
 | **Math** | 20-problem fact drills. Each right answer uncovers part of a hidden picture, and spelling the picture early earns a bonus. Parents choose each child's skills in Parents → Math; Falling Facts uses the same picks. |
+| **Phonics** | K–2nd games: Sound Sort, Blend Builder and the Magic-e Door. |
+| **Spell-a-Rocket** | Words spelled right fuel a rocket, and tanks stack. Steer the flight, catch little rockets for fuel, dodge what slows you down, and beat your height record. |
+| **Falling Facts** | Math problems or flashcard answers fall in the Spellfall game. |
 | **Family goal** | Both kids fill one shared weekly meter. There is no leaderboard and no comparing siblings. |
 
 | For parents | |
@@ -23,6 +26,7 @@ It's a plain static website, with no accounts, no server, and no build step. Eve
 | **Progress** | Days active, sessions, tricky flashcards, math pictures, and Spellfall's own score and tricky-word history. |
 | **Welcome** | Three steps for a new family: add kids, pick this week's words and curriculum, then practice the Parents button and set an optional PIN. |
 | **Help** | A How do I list and a short guide for every section, from the kid picker footer or Parents → Help. Content lives in `js/help.js`. |
+| **Printable page** | One page per child: the week's words on handwriting lines and a Monday–Friday checklist. |
 | **Parent PIN** | Press-and-hold, then a 4-digit PIN. It's a kid deterrent, not real security. |
 | **Backup / restore** | Download a JSON file, or restore from one. |
 
@@ -64,6 +68,9 @@ js/core.js            storage (versioned, one family per browser), AI client, sp
 js/content.js         built-in spelling lists and math skill generators by grade
 js/hub.js             screens: kids, Today, flashcards, math, parent mode
 js/help.js            parent help: How do I list + one guide per section
+js/phonics.js         Sound Sort, Blend Builder, Magic-e Door
+js/rocket.js          Spell-a-Rocket flight game
+test/                 math audit (node test/math-audit.js) and a sample backup for testing
 privacy.html          plain-language privacy notice
 apps/spellfall/       the Spellfall game, reading kid profiles from the hub
 ```
@@ -72,11 +79,10 @@ Data model: `hub:v1:<familyId>` holds the family. Each kid has `spellfall`, `fla
 
 ## Roadmap (from the brainstorm)
 
-- **Phonics:** special-sounds sorting (falling words dropped into sound bins), blend builder, silent-e "magic door", read-aloud passages.
-- **Math:** Falling Facts in the Spellfall engine, coin market, clock shop, fraction pizza.
-- **Spelling and flashcards:** falling-flashcards round (the clue shows, the answer falls), auto weekly list from recent misses.
+- **Phonics:** read-aloud passages.
+- **Math:** coin market, clock shop, fraction pizza.
+- **Spelling:** auto weekly list from recent misses.
 - **Science:** Newton's crash lab, rocket thrust, magnet maze.
-- **Something cool:** *Spell-a-Rocket*, where each correct word adds fuel and the rocket launches with real physics.
 - **Later:** offline mode, multiple families, an optional hosted "no key needed" scan.
 
 ## Feedback

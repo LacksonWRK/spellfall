@@ -1,0 +1,193 @@
+{
+  "app": "homeschool-hub",
+  "exportedAt": "2026-10-30T20:18:21.157Z",
+  "family": {
+    "id": "ftestpass5",
+    "schema": 1,
+    "name": "Our family",
+    "createdAt": 1793391501157,
+    "lastExport": 1793391501157,
+    "settings": {
+      "pinHash": null,
+      "pinSalt": null,
+      "meterGoal": 60,
+      "curriculum": "abeka"
+    },
+    "plan": {
+      "template": [
+        {
+          "id": "spelling",
+          "label": "Spelling game",
+          "subject": "spelling"
+        },
+        {
+          "id": "flashcards",
+          "label": "Flashcards",
+          "subject": "flashcards"
+        },
+        {
+          "id": "math",
+          "label": "Math facts",
+          "subject": "math"
+        },
+        {
+          "id": "typing",
+          "label": "Typing lesson",
+          "subject": "typing"
+        },
+        {
+          "id": "reading",
+          "label": "Read aloud 15 minutes",
+          "subject": null
+        }
+      ],
+      "done": {}
+    },
+    "kids": [
+      {
+        "id": "ptfirst",
+        "name": "First",
+        "grade": "1st",
+        "avatar": "🚀",
+        "color": "yellow",
+        "order": 0,
+        "createdAt": 1793391501157,
+        "spellfall": {
+          "list": {
+            "id": "l13",
+            "title": "Short a and i",
+            "weekOf": "2026-10-26",
+            "words": [
+              "cat",
+              "hat",
+              "map",
+              "bag",
+              "pig",
+              "sit",
+              "win",
+              "lip"
+            ],
+            "addedAt": 1793391501157
+          }
+        },
+        "flashcards": {
+          "decks": []
+        },
+        "math": {
+          "skills": {},
+          "best": {},
+          "pics": 0
+        },
+        "phonics": {
+          "best": {}
+        },
+        "rocket": {
+          "fuel": 60,
+          "launches": 0,
+          "best": 0
+        },
+        "log": []
+      },
+      {
+        "id": "ptfourth",
+        "name": "Fourth",
+        "grade": "4th",
+        "avatar": "🦖",
+        "color": "blue",
+        "order": 1,
+        "createdAt": 1793391501157,
+        "spellfall": {
+          "list": {
+            "id": "l16",
+            "title": "Long a spellings",
+            "weekOf": "2026-10-26",
+            "words": [
+              "brave",
+              "escape",
+              "chain",
+              "explain",
+              "display",
+              "holiday"
+            ],
+            "addedAt": 1793391501157
+          }
+        },
+        "flashcards": {
+          "decks": [
+            {
+              "id": "d1",
+              "title": "Science",
+              "cards": [
+                {
+                  "id": "c1",
+                  "q": "The sun is a ___.",
+                  "a": "star",
+                  "box": 0
+                },
+                {
+                  "id": "c2",
+                  "q": "Water freezes into ___.",
+                  "a": "ice",
+                  "box": 0
+                },
+                {
+                  "id": "c3",
+                  "q": "Plants need ___ to grow.",
+                  "a": "light",
+                  "box": 0
+                },
+                {
+                  "id": "c4",
+                  "q": "A baby frog is a ___.",
+                  "a": "tadpole",
+                  "box": 0
+                }
+              ]
+            }
+          ]
+        },
+        "math": {
+          "skills": {},
+          "best": {},
+          "pics": 0
+        },
+        "phonics": {
+          "best": {}
+        },
+        "rocket": {
+          "fuel": 30,
+          "launches": 0,
+          "best": 0
+        },
+        "log": []
+      },
+      {
+        "id": "ptseventh",
+        "name": "Seventh",
+        "grade": "7th",
+        "avatar": "🦉",
+        "color": "green",
+        "order": 2,
+        "createdAt": 1793391501157,
+        "spellfall": {},
+        "flashcards": {
+          "decks": []
+        },
+        "math": {
+          "skills": {},
+          "best": {},
+          "pics": 0
+        },
+        "phonics": {
+          "best": {}
+        },
+        "rocket": {
+          "fuel": 0,
+          "launches": 0,
+          "best": 0
+        },
+        "log": []
+      }
+    ]
+  }
+}
