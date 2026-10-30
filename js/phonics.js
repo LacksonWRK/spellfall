@@ -24,7 +24,7 @@
     { id: 'blend', icon: '🧱', name: 'Blend Builder', sub: 'Hear a word, build it with letter tiles' },
     { id: 'magic', icon: '🚪', name: 'Magic-e Door', sub: 'Add an e and the word changes' }
   ];
-  const ROUND = 8;
+  const ROUND = 8, RIGHT_MS = 1000, SHOWN_MS = 1800; // how long the Correct stamp, or a shown answer, stays up
   const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -82,7 +82,7 @@
         <h1 class="h2 center">${X.esc(G.sort.title)}</h1><p class="muted center">${X.esc(G.sort.tip)} Tap the word to hear it, then tap its bin.</p>
         <div class="ph-stage"><button class="ph-word ${RM ? '' : 'falling'}" data-ph="hear" aria-label="${X.esc(it.w)}. Tap to hear it.">${X.esc(it.w)}</button></div>
         <div class="ph-bins">${G.sort.bins.map(b => `<button class="ph-bin" data-ph="bin" data-v="${X.esc(b)}">${X.esc(b)}</button>`).join('')}</div>
-        <p class="fine center" id="ph-msg" aria-live="polite">${G.tries ? 'Not that one. Listen again and try the other bin.' : ''}</p>
+        <p class="fine center" id="ph-msg" aria-live="polite">${G.tries ? 'Not that one. Listen again and try another bin.' : ''}</p>
       </div>`;
       if (!G.spoke) { G.spoke = true; X.speech.say(it.w); }
     } else if (G.game === 'blend') {
@@ -110,12 +110,13 @@
     }
   }
 
-  function next(firstTry) {
+  function next(firstTry, wait) {
     if (firstTry) G.right++;
-    G.i++; G.tries = 0; G.spoke = false;
+    G.i++; G.tries = 0; G.spoke = false; G.busy = true;
     if (G.i >= G.items.length) G.done = true;
-    timer = setTimeout(draw, firstTry ? 700 : 1200);
+    timer = setTimeout(() => { G.busy = false; draw(); }, wait);
   }
+  function correct(host, firstTry) { window.Hub.stamp(host, RIGHT_MS); next(firstTry, RIGHT_MS); }
   function msg(t) { const m = document.getElementById('ph-msg'); if (m) m.textContent = t; }
 
   function finish(k) {
@@ -132,24 +133,25 @@
       <p class="muted center">${name}: ${G.right} of ${ROUND} right on the first try</p>
       <div class="row" style="justify-content:center"><button class="btn primary big" data-ph="again">Again</button><a class="btn ghost" href="#/kid/${k.id}/phonics">Other games</a><a class="btn ghost" href="#/kid/${k.id}">Done</a></div>
     </div>`;
+    window.scrollTo(0, 0);
   }
 
   document.addEventListener('click', e => {
-    const b = e.target.closest('[data-ph]'); if (!b || !G || G.done && b.dataset.ph !== 'again') return;
+    const b = e.target.closest('[data-ph]'); if (!b || !G || G.busy || G.done && b.dataset.ph !== 'again') return;
     const it = G.items[G.i], a = b.dataset.ph;
     if (a === 'again') { const k = X.store.kid(G.kidId); start(k, G.game); return draw(); }
     if (a === 'hear') return X.speech.say(G.game === 'magic' ? it.ask : it.w);
     if (a === 'bin') {
-      if (b.dataset.v === it.bin) { b.classList.add('ok'); X.speech.say(it.w); msg('Yes! ' + it.w + ' goes with ' + it.bin + '.'); $$('[data-ph=bin]').forEach(x => { x.disabled = true; }); return next(G.tries === 0); }
+      if (b.dataset.v === it.bin) { b.classList.add('ok'); X.speech.say(it.w); msg(it.w + ' goes with ' + it.bin + '.'); $$('[data-ph=bin]').forEach(x => { x.disabled = true; }); return correct(document.querySelector('.ph-stage'), G.tries === 0); }
       G.tries++; b.classList.remove('bad'); void b.offsetWidth; b.classList.add('bad');
-      if (G.tries >= 2) { msg(`${it.w} goes with ${it.bin}.`); $$('[data-ph=bin]').forEach(x => { x.disabled = true; if (x.dataset.v === it.bin) x.classList.add('ok'); }); return next(false); }
-      return msg('Not that one. Listen again and try the other bin.');
+      if (G.tries >= 2) { msg(`${it.w} goes with ${it.bin}.`); $$('[data-ph=bin]').forEach(x => { x.disabled = true; if (x.dataset.v === it.bin) x.classList.add('ok'); }); return next(false, SHOWN_MS); }
+      return msg('Not that one. Listen again and try another bin.');
     }
     if (a === 'tile') {
       const t = it.tiles.find(x => x.id === +b.dataset.id); if (!t || t.used || it.built.length >= it.w.length) return;
       t.used = true; it.built.push(t); draw();
       if (it.built.length === it.w.length) {
-        if (it.built.map(x => x.c).join('') === it.w) { X.speech.say(it.w); msg('You built ' + it.w + '!'); $$('.ph-slot').forEach(s => s.classList.add('ok')); return next(G.tries === 0); }
+        if (it.built.map(x => x.c).join('') === it.w) { X.speech.say(it.w); msg('You built ' + it.w + '.'); $$('.ph-slot').forEach(s => s.classList.add('ok')); return correct(document.querySelector('.ph-slots'), G.tries === 0); }
         G.tries++; msg(G.tries >= 2 ? `It's ${it.w.split('').join('-')}. Tap a letter to take it back.` : 'Almost! Tap a letter in the word to take it back.');
         $$('.ph-slot.full').forEach(s => { s.classList.remove('bad'); void s.offsetWidth; s.classList.add('bad'); });
       }
@@ -158,9 +160,9 @@
     if (a === 'unslot') { const n = +b.dataset.n, t = it.built[n]; if (!t) return; it.built.splice(n, 1); t.used = false; return draw(); }
     if (a === 'open') { it.opened = true; X.speech.say(`${it.a}. Add the magic e. ${it.b}.`, { rate: .8 }); draw(); setTimeout(() => { if (G && G.items[G.i] === it) X.speech.say(it.ask, { rate: .85 }); }, 3200); return; }
     if (a === 'pickw') {
-      if (b.dataset.v === it.ask) { b.classList.add('ok'); msg('Yes! ' + it.ask + '.'); $$('[data-ph=pickw]').forEach(x => { x.disabled = true; }); return next(G.tries === 0); }
+      if (b.dataset.v === it.ask) { b.classList.add('ok'); msg('It was ' + it.ask + '.'); $$('[data-ph=pickw]').forEach(x => { x.disabled = true; }); return correct(document.querySelector('.ph-bins'), G.tries === 0); }
       G.tries++; b.classList.add('bad'); X.speech.say(it.ask, { rate: .8 });
-      if (G.tries >= 2) { msg(`It was ${it.ask}.`); $$('[data-ph=pickw]').forEach(x => { x.disabled = true; if (x.dataset.v === it.ask) x.classList.add('ok'); }); return next(false); }
+      if (G.tries >= 2) { msg(`It was ${it.ask}.`); $$('[data-ph=pickw]').forEach(x => { x.disabled = true; if (x.dataset.v === it.ask) x.classList.add('ok'); }); return next(false, SHOWN_MS); }
       return msg('Listen again: does the vowel say its name?');
     }
   });

@@ -108,14 +108,14 @@
     sub18: { label: 'Subtracting from 18', grades: ['1st', '2nd'], gen() { const b = ri(2, 9), c = ri(2, 9); return { q: `${b + c} − ${b}`, a: c }; } },
     missing: { label: 'Missing number', grades: ['1st', '2nd'], gen() { const a = ri(1, 9), b = ri(1, 9); return { q: `${a} + ? = ${a + b}`, a: b, say: `${a} plus what equals ${a + b}` }; } },
     skip: { label: 'Skip counting', grades: ['1st', '2nd'], gen() { const s = pick([2, 5, 10]), k = ri(1, 8); return { q: `${s * k}, ${s * (k + 1)}, ${s * (k + 2)}, ?`, a: s * (k + 3), say: `count by ${s}s. ${s * k}, ${s * (k + 1)}, ${s * (k + 2)}, what comes next` }; } },
-    tens: { label: 'Tens and ones', grades: ['1st', '2nd'], gen() { const t = ri(1, 9), o = ri(0, 9); return { q: `${t} tens ${o} ones`, a: t * 10 + o, say: `${t} tens and ${o} ones` }; } },
+    tens: { label: 'Tens and ones', grades: ['1st', '2nd'], gen() { const t = ri(1, 9), o = ri(0, 9), n = `${t} ten${t === 1 ? '' : 's'}`, m = `${o} one${o === 1 ? '' : 's'}`; return { q: `${n} ${m}`, a: t * 10 + o, say: `${n} and ${m}` }; } },
     add2d: { label: 'Two-digit adding', grades: ['2nd', '3rd'], gen() { const a = ri(10, 89), b = ri(10, 99 - a); return { q: `${a} + ${b}`, a: a + b }; } },
     mul5: { label: 'Times tables 0–5', grades: ['2nd', '3rd', '4th'], gen() { const a = ri(0, 5), b = ri(0, 10); return { q: `${a} × ${b}`, a: a * b }; } },
     mul12: { label: 'Times tables to 12', grades: ['3rd', '4th', '5th'], gen() { const a = ri(2, 12), b = ri(2, 12); return { q: `${a} × ${b}`, a: a * b }; } },
     div12: { label: 'Division facts', grades: ['3rd', '4th', '5th'], gen() { const a = ri(2, 12), b = ri(2, 12); return { q: `${a * b} ÷ ${a}`, a: b }; } },
     mul2x1: { label: 'Two-digit × one-digit', grades: ['4th', '5th'], gen() { const a = ri(12, 99), b = ri(2, 9); return { q: `${a} × ${b}`, a: a * b }; } },
     mul10: { label: 'Multiply by 10, 100, 1000', grades: ['4th', '5th'], gen() { const a = ri(2, 99), b = pick([10, 100, 1000]); return { q: `${a} × ${b}`, a: a * b }; } },
-    fracof: { label: 'Fraction of a number', grades: ['4th', '5th'], gen() { const d = pick([2, 3, 4, 5, 6, 8, 10]), k = ri(2, 9); return { q: `1/${d} of ${d * k}`, a: k, say: `one ${d === 2 ? 'half' : d === 4 ? 'fourth' : 'over ' + d} of ${d * k}` }; } },
+    fracof: { label: 'Fraction of a number', grades: ['4th', '5th'], gen() { const d = pick([2, 3, 4, 5, 6, 8, 10]), k = ri(2, 9); return { q: `1/${d} of ${d * k}`, a: k, say: `one ${{ 2: 'half', 3: 'third', 4: 'fourth', 5: 'fifth', 6: 'sixth', 8: 'eighth', 10: 'tenth' }[d]} of ${d * k}` }; } },
     round: { label: 'Rounding to tens', grades: ['3rd', '4th'], gen() { let n = ri(11, 989); if (n % 10 === 5) n++; return { q: `Round ${n} to the nearest ten`, a: Math.round(n / 10) * 10, say: `round ${n} to the nearest ten` }; } },
     pct: { label: 'Percent of a number', grades: ['6th', '7th'], gen() { const p = pick([10, 20, 25, 50, 75]), n = pick([20, 40, 60, 80, 100, 120, 200, 400]); return { q: `${p}% of ${n}`, a: p * n / 100, say: `${p} percent of ${n}` }; } },
     rate: { label: 'Unit rates', grades: ['6th', '7th'], gen() { const u = ri(2, 12), t = ri(2, 9); return { q: `${u * t} miles in ${t} hours: miles per hour?`, a: u }; } },
@@ -128,15 +128,89 @@
     eq1: { label: 'One-step equations', grades: ['7th'], neg: true, gen() { const x = ri(-9, 15), k = ri(2, 12); return pick([{ q: `x + ${k} = ${x + k}`.replace(/-/g, '−'), a: x, say: `x plus ${k} equals ${x + k}. What is x?`.replace(/-/g, 'negative ') }, { q: `${k}x = ${k * x}`.replace(/-/g, '−'), a: x, say: `${k} x equals ${k * x}. What is x?`.replace(/-/g, 'negative ') }]); } },
     prop: { label: 'Proportions', grades: ['7th'], gen() { const a = ri(1, 9), b = ri(a + 1, 12), m = ri(2, 8); return { q: `${a}/${b} = x/${b * m}`, a: a * m, say: `${a} over ${b} equals x over ${b * m}. What is x?` }; } },
     eq2: { label: 'Two-step equations', grades: ['8th'], neg: true, gen() { const x = ri(-9, 12), k = ri(2, 9), c = ri(1, 20); return { q: `${k}x + ${c} = ${k * x + c}`.replace(/-/g, '−'), a: x, say: `${k} x plus ${c} equals ${k * x + c}. What is x?`.replace(/-/g, 'negative ') }; } },
-    roots: { label: 'Square and cube roots', grades: ['8th'], gen() { return Math.random() < .7 ? (n => ({ q: `√${n * n}`, a: n, say: `the square root of ${n * n}` }))(ri(2, 15)) : (n => ({ q: `∛${n ** 3}`, a: n, say: `the cube root of ${n ** 3}` }))(ri(2, 6)); } },
+    roots: { label: 'Square and cube roots', grades: ['8th'], gen() { return Math.random() < .7 ? (n => ({ q: `√${n * n}`, a: n, say: `the square root of ${n * n}` }))(ri(2, 15)) : (n => ({ q: `³√${n ** 3}`, a: n, say: `the cube root of ${n ** 3}` }))(ri(2, 6)); } },
     slope: { label: 'Slope from two points', grades: ['8th'], neg: true, gen() { const m = pick([-4, -3, -2, -1, 1, 2, 3, 4, 5]), x1 = ri(-5, 5), y1 = ri(-5, 5), dx = ri(1, 4); return { q: `Slope through (${x1}, ${y1}) and (${x1 + dx}, ${y1 + m * dx})?`.replace(/-/g, '−'), a: m, say: `slope of the line through ${x1} comma ${y1} and ${x1 + dx} comma ${y1 + m * dx}`.replace(/-/g, 'negative ') }; } },
     pyth: { label: 'Pythagorean theorem', grades: ['8th'], gen() { const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25]]), k = pick([1, 1, 2, 3]); return { q: `Legs ${a * k} and ${b * k}: hypotenuse?`, a: c * k, say: `a right triangle has legs ${a * k} and ${b * k}. How long is the hypotenuse?` }; } },
     sci: { label: 'Powers of ten', grades: ['8th'], gen() { const n = ri(2, 9), e = ri(3, 8); return { q: `${(n * 10 ** e).toLocaleString('en-US')} = ${n} × 10^?`, a: e, say: `${n * 10 ** e} equals ${n} times 10 to what power?` }; } },
   };
+  /* how a problem reads: the drill line, the worked answer, and read-aloud. Shared so the screens can't drift. */
+  const SUPERS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+  const problemText = p => /=|\?|Round/.test(p.q) ? p.q : `${p.q} =`;
+  function solvedText(p) { // never a doubled "=": 3 + ? = 7 becomes 3 + 4 = 7
+    const a = String(p.a).replace('-', '−');
+    if (/\dx\b|\bx\b/.test(p.q)) return `${p.q}, x = ${a}`;
+    if (p.q.includes('^?')) return p.q.replace('^?', [...String(p.a)].map(d => SUPERS[d]).join(''));
+    if (/(^|[ ,])\?( |$)/.test(p.q)) return p.q.replace('?', a);
+    if (p.q.endsWith('?')) return `${p.q.slice(0, -1)} = ${a}`;
+    if (p.q.startsWith('Round')) return `${p.q}: ${a}`;
+    return `${p.q} = ${a}`;
+  }
+  const sayText = p => p.say || p.q.replace(/×/g, 'times').replace(/÷/g, 'divided by').replace(/−/g, 'minus').replace(/\+/g, 'plus');
+
   function skillsFor(grade) { return Object.entries(SKILLS).filter(([, s]) => s.grades.includes(grade)).map(([id, s]) => ({ id, ...s })); }
 
-  /* hidden pictures revealed tile by tile in math (emoji keeps them light and offline) */
-  const PICTURES = ['🚀', '🦖', '🐙', '🦈', '🐉', '🌋', '🦉', '🐢', '🛸', '🏰', '🦁', '🐳', '🦕', '⚽', '🏎️', '🌈'];
+  /* Which skills a child practices. kid.math.on (skill ids) is the parent's choice; with none saved the
+     grade's defaults apply, so a grade change follows along. skillsForKid drives the drill screen and
+     Falling Facts both, so the two can't disagree. */
+  const DEFAULT_ON = { K: ['add10'], '1st': ['add10', 'add18'], '2nd': ['add18', 'sub18', 'missing', 'skip', 'tens', 'add2d'] };
+  const defaultMathOn = grade => DEFAULT_ON[grade] || skillsFor(grade).map(s => s.id);
+  function mathOnIds(kid) { const saved = kid.math && kid.math.on, on = Array.isArray(saved) ? saved : defaultMathOn(kid.grade); return Object.keys(SKILLS).filter(id => on.includes(id)); }
+  const skillsForKid = kid => mathOnIds(kid).map(id => ({ id, ...SKILLS[id] }));
+  const MATH_GROUPS = [
+    ['Adding', ['add10', 'add18', 'add2d']],
+    ['Subtracting', ['sub10', 'sub18']],
+    ['Multiplying', ['mul5', 'mul12', 'mul2x1', 'mul10']],
+    ['Dividing', ['div12']],
+    ['Numbers and place value', ['missing', 'skip', 'tens', 'round']],
+    ['Fractions and percents', ['fracof', 'pct', 'rate', 'prop']],
+    ['Factors, powers and roots', ['ops', 'gcf', 'lcm', 'sq', 'roots', 'sci']],
+    ['Negative numbers', ['intadd', 'intmul']],
+    ['Equations and geometry', ['eq1', 'eq2', 'slope', 'pyth']]
+  ];
+  /* Falling Facts: a rock has room for a short problem, and it should read as clean math */
+  const fallsOnARock = q => q.length <= 14 && !/[=?a-z]/i.test(q);
+  const skillFalls = sk => { for (let i = 0; i < 8; i++) if (!fallsOnARock(sk.gen().q)) return false; return true; };
+  const fallingFor = kid => skillsForKid(kid).filter(skillFalls);
 
-  window.HubContent = { LISTS, listsFor, ABEKA_GRADES, SKILLS, skillsFor, PICTURES };
+  /* hidden pictures revealed tile by tile in math (emoji keeps them light and offline). A child can
+     guess one by spelling it: `ok` is every spelling that counts. age: K-2nd get 'young' + 'all', 3rd and up get 'older' + 'all'. */
+  const PICTURES = [
+    { art: '🚗', name: 'car', ok: ['car', 'racecar', 'automobile'], age: 'young' },
+    { art: '🚌', name: 'bus', ok: ['bus', 'schoolbus'], age: 'young' },
+    { art: '🐱', name: 'cat', ok: ['cat', 'kitty', 'kitten'], age: 'young' },
+    { art: '🐶', name: 'dog', ok: ['dog', 'puppy', 'pup', 'doggy'], age: 'young' },
+    { art: '🐷', name: 'pig', ok: ['pig', 'piggy', 'hog'], age: 'young' },
+    { art: '🐮', name: 'cow', ok: ['cow'], age: 'young' },
+    { art: '🐟', name: 'fish', ok: ['fish'], age: 'young' },
+    { art: '🐸', name: 'frog', ok: ['frog'], age: 'young' },
+    { art: '🦆', name: 'duck', ok: ['duck', 'duckling'], age: 'young' },
+    { art: '🐝', name: 'bee', ok: ['bee', 'honeybee', 'bumblebee'], age: 'young' },
+    { art: '🌳', name: 'tree', ok: ['tree'], age: 'young' },
+    { art: '⭐', name: 'star', ok: ['star'], age: 'young' },
+    { art: '🌙', name: 'moon', ok: ['moon'], age: 'young' },
+    { art: '⛵', name: 'boat', ok: ['boat', 'sailboat', 'ship'], age: 'young' },
+    { art: '🎂', name: 'cake', ok: ['cake', 'birthdaycake'], age: 'young' },
+    { art: '🍎', name: 'apple', ok: ['apple'], age: 'young' },
+    { art: '🚀', name: 'rocket', ok: ['rocket', 'rocketship', 'spaceship'], age: 'all' },
+    { art: '🦖', name: 'dinosaur', ok: ['dinosaur', 'dino', 'trex', 'tyrannosaurus', 'tyrannosaurusrex'], age: 'all' },
+    { art: '🦈', name: 'shark', ok: ['shark'], age: 'all' },
+    { art: '🦉', name: 'owl', ok: ['owl'], age: 'all' },
+    { art: '🦁', name: 'lion', ok: ['lion'], age: 'all' },
+    { art: '🐳', name: 'whale', ok: ['whale'], age: 'all' },
+    { art: '🐙', name: 'octopus', ok: ['octopus'], age: 'older' },
+    { art: '🐉', name: 'dragon', ok: ['dragon'], age: 'older' },
+    { art: '🌋', name: 'volcano', ok: ['volcano'], age: 'older' },
+    { art: '🐢', name: 'turtle', ok: ['turtle', 'tortoise'], age: 'older' },
+    { art: '🏰', name: 'castle', ok: ['castle'], age: 'older' },
+    { art: '🌈', name: 'rainbow', ok: ['rainbow'], age: 'older' },
+    { art: '🤖', name: 'robot', ok: ['robot'], age: 'older' },
+    { art: '🐧', name: 'penguin', ok: ['penguin'], age: 'older' },
+    { art: '🦋', name: 'butterfly', ok: ['butterfly'], age: 'older' },
+    { art: '🐘', name: 'elephant', ok: ['elephant'], age: 'older' }
+  ];
+  const picturesFor = grade => PICTURES.filter(p => p.age === 'all' || p.age === (['K', '1st', '2nd'].includes(grade) ? 'young' : 'older'));
+  const guessKey = s => String(s || '').toLowerCase().replace(/^\s*(a|an|the)\s+/, '').replace(/[^a-z]/g, ''); // "a Race car" -> racecar
+  const pictureMatches = (pic, text) => pic.ok.includes(guessKey(text));
+
+  window.HubContent = { LISTS, listsFor, ABEKA_GRADES, SKILLS, skillsFor, defaultMathOn, mathOnIds, skillsForKid, MATH_GROUPS, skillFalls, fallingFor, SUPERS, problemText, solvedText, sayText, PICTURES, picturesFor, pictureMatches, guessKey };
 })();

@@ -12,7 +12,7 @@ It's a plain static website, with no accounts, no server, and no build step. Eve
 | **Spelling** (Spellfall) | Falling-words game with 3 worlds and 3 modes (visible, show-then-fade, listen-only), plus hidden-words spell-from-memory. |
 | **Typing** | 24 lessons from home row to sentences, with a finger guide. |
 | **Flashcards** | Fill-in-the-blank cards. Kids "climb the tower": 🪨 Stones (new), 🪜 Stairs (getting it), ⭐ Stars (learned). Includes hints, read-aloud, and retry. |
-| **Math** | 20-problem fact drills by grade. Each right answer uncovers part of a hidden picture. |
+| **Math** | 20-problem fact drills. Each right answer uncovers part of a hidden picture, and spelling the picture early earns a bonus. Parents choose each child's skills in Parents → Math; Falling Facts uses the same picks. |
 | **Family goal** | Both kids fill one shared weekly meter. There is no leaderboard and no comparing siblings. |
 
 | For parents | |

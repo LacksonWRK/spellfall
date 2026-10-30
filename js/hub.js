@@ -1,7 +1,7 @@
 /* Spellfall Homeschool hub: kid picker, Today, Flashcards, Math, Parent mode. */
 (function () {
   'use strict';
-  const { store, ai, speech, pin, uid, clone, today, VERSION, FEEDBACK_EMAIL, ROCKET_TANK } = window.Hub;
+  const { store, ai, speech, stamp, pin, uid, clone, today, VERSION, FEEDBACK_EMAIL, ROCKET_TANK } = window.Hub;
   const feedbackHref = () => `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`Spellfall feedback (v${VERSION})`)}&body=${encodeURIComponent(`Version ${VERSION}\nDevice: \n\nWhat happened, or what would help:\n`)}`;
   const C = window.HubContent;
   const $ = (s, r = document) => r.querySelector(s);
@@ -22,13 +22,13 @@
   const SUBJECTS = {
     spelling: { label: 'Spelling', icon: '✏️', color: COLORS.yellow },
     flashcards: { label: 'Flashcards', icon: '🃏', color: COLORS.blue },
-    math: { label: 'Math', icon: '➗', color: COLORS.green },
+    math: { label: 'Math', icon: '🧮', color: COLORS.green },
     typing: { label: 'Typing', icon: '⌨️', color: COLORS.lilac },
     phonics: { label: 'Phonics', icon: '🔤', color: COLORS.pink }
   };
 
   store.load();
-  const S = { parentOK: false, parentAt: 0, ptab: 'kids', pkid: null, scan: null, review: null, study: null, drill: null, mathSkill: {} };
+  const S = { parentOK: false, parentAt: 0, ptab: 'kids', pkid: null, scan: null, review: null, study: null, drill: null, mathSkill: {}, mathEx: {} };
 
   /* ---------- small UI helpers ---------- */
   let toastT = 0;
@@ -296,7 +296,7 @@
           <div class="subjects">
             <a class="subj" style="--sc:${SUBJECTS.spelling.color}" href="${subjectHref(k, 'spelling')}"><span class="ic">✏️</span><b>Spelling</b><span>${list && list.words ? `${esc(list.title)} · ${list.words.length} words` : 'No list yet'}</span></a>
             <a class="subj" style="--sc:${SUBJECTS.flashcards.color}" href="#/kid/${k.id}/flashcards"><span class="ic">🃏</span><b>Flashcards</b><span>${decks.length ? `${decks.length} deck${decks.length === 1 ? '' : 's'} · ${due} to practice` : 'No decks yet'}</span></a>
-            <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">➗</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} pictures found</span></a>
+            <a class="subj" style="--sc:${SUBJECTS.math.color}" href="#/kid/${k.id}/math"><span class="ic">🧮</span><b>Math</b><span>Fact drills · ${k.math.pics || 0} picture${k.math.pics === 1 ? '' : 's'} found</span></a>
             <a class="subj" style="--sc:${SUBJECTS.typing.color}" href="${subjectHref(k, 'typing')}"><span class="ic">⌨️</span><b>Typing</b><span>${(() => { const n = ((k.spellfall.typing || {}).unlocked || 0) + 1; return `${n} lesson${n === 1 ? '' : 's'} unlocked`; })()}</span></a>
             <a class="subj" style="--sc:${COLORS.orange}" href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=hidden"><span class="ic">🙈</span><b>Hidden words</b><span>Spell from memory</span></a>
             <a class="subj" style="--sc:${COLORS.blue}" href="#/kid/${k.id}/rocket"><span class="ic">🚀</span><b>Rocket</b><span>${(k.rocket.fuel || 0) >= ROCKET_TANK * 2 ? `${Math.floor(k.rocket.fuel / ROCKET_TANK)} tanks ready!` : (k.rocket.fuel || 0) >= ROCKET_TANK ? 'Ready to launch!' : `Fuel ${k.rocket.fuel || 0} / ${ROCKET_TANK}`}${k.rocket.best ? ` · record ${window.HubRocket.fmt(k.rocket.best)}` : ''}</span></a>
@@ -307,6 +307,9 @@
       </div>
     </div>`;
   }
+
+  // tapping Check takes focus off the input; taking it back inside the tap keeps the iPad keyboard up for the next problem
+  function keepFocus(inp) { try { inp.focus({ preventScroll: true }); } catch {} }
 
   /* ---------- flashcards: decks ---------- */
   const BOX = [{ ic: '🪨', name: 'Stones', sub: 'new' }, { ic: '🪜', name: 'Stairs', sub: 'getting it' }, { ic: '⭐', name: 'Stars', sub: 'learned' }];
@@ -322,7 +325,7 @@
       ${all.length ? `<p class="muted">Climb the tower! Get a card right and it moves up. Stars are cards you know.</p>${towerHTML(all)}<p class="fine">Or play <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=flash">☄️ Falling flashcards</a>: read the clue, type the answer before it lands.</p>` : ''}
       ${decks.length ? decks.map(d => {
         const left = d.cards.filter(c => (c.box || 0) < 2).length;
-        return `<div class="deckrow"><div><b>${esc(d.title)}</b><small>${d.cards.length} cards · ${left ? `${left} still climbing` : 'all stars!'}${d.subject ? ' · ' + esc(d.subject) : ''}</small></div><a class="btn primary" href="#/kid/${k.id}/flashcards/${d.id}">${left ? 'Practice' : 'Review'}</a></div>`;
+        return `<div class="deckrow"><div><b>${esc(d.title)}</b><small>${d.cards.length} card${d.cards.length === 1 ? '' : 's'} · ${left ? `${left} still climbing` : 'all stars!'}${d.subject ? ' · ' + esc(d.subject) : ''}</small></div><a class="btn primary" href="#/kid/${k.id}/flashcards/${d.id}">${left ? 'Practice' : 'Review'}</a></div>`;
       }).join('') : `<div class="card"><p class="h3">No flashcards yet</p><p class="muted">Ask a grown-up to snap a photo of a quiz or study sheet. Press and hold the Parents button.</p></div>`}
     </div>`;
   }
@@ -345,18 +348,28 @@
     const parts = String(c.q).split(/_{2,}/), hasBlank = parts.length > 1;
     const blank = `<span class="blank ${st.revealed ? 'right' : ''}">${st.revealed ? esc(c.a) : '&nbsp;'}</span>`;
     const qHTML = hasBlank ? esc(parts[0]) + blank + esc(parts.slice(1).join('___')) : esc(c.q) + '<br>' + blank;
-    const hint = st.revealed ? (st.mustType ? 'Here it is. Type it once to remember it.' : '') : st.tries === 1 ? `Hint: ${[...c.a].map(ch => /\s/.test(ch) ? '&nbsp;&nbsp;' : '_').join(' ')} (${c.a.replace(/\s/g, '').length} letters)` : st.tries === 2 ? `Hint: it starts with “${esc(c.a[0])}”` : '';
-    app.innerHTML = `<div class="wrap narrow">
-      <div class="spread"><a class="btn ghost small" href="#/kid/${k.id}/flashcards">← Decks</a><span class="fine">Card ${st.i + 1} of ${st.queue.length} · ${BOX[Math.min(2, c.box || 0)].ic} ${BOX[Math.min(2, c.box || 0)].name}</span></div>
-      <div class="pbar"><i style="width:${Math.round(st.i / st.queue.length * 100)}%"></i></div>
+    const hint = st.revealed ? (st.mustType ? 'Here it is. Type it once to remember it.' : '') : st.tries === 1 ? `Not quite. Hint: ${[...c.a].map(ch => /\s/.test(ch) ? '&nbsp;&nbsp;' : '_').join(' ')} (${c.a.replace(/\s/g, '').length} letter${c.a.replace(/\s/g, '').length === 1 ? '' : 's'})` : st.tries === 2 ? `Not quite. Hint: it starts with “${esc(c.a[0])}”` : '';
+    const head = `<a class="btn ghost small" href="#/kid/${k.id}/flashcards">← Decks</a><span class="fine">Card ${st.i + 1} of ${st.queue.length} · ${BOX[Math.min(2, c.box || 0)].ic} ${BOX[Math.min(2, c.box || 0)].name}</span>`;
+    const card = `<div class="meta"><span>${esc(d.title)}</span><span>${c.ref ? esc(c.ref) : ''}</span></div><p class="q">${qHTML}</p><p class="hint">${hint}</p>`;
+    const tools = `<button class="btn small ghost" data-act="fc-hear">🔊 Read it to me</button>${!st.revealed ? '<button class="btn small ghost" data-act="fc-show">Show me</button>' : ''}`;
+    const pct = Math.round(st.i / st.queue.length * 100), label = st.revealed && !st.mustType && !st.busy ? 'Next' : 'Check';
+    let inp = $('#ans');
+    if (inp) { // same screen: keep this input so the iPad keyboard stays up from card to card
+      $('#st-head').innerHTML = head; $('.pbar i').style.width = pct + '%'; $('.fcard').innerHTML = card; $('#st-tools').innerHTML = tools; $('#st-go').textContent = label;
+      inp.value = ''; inp.classList.remove('bad');
+    } else {
+      app.innerHTML = `<div class="wrap narrow">
+      <div class="spread" id="st-head">${head}</div>
+      <div class="pbar"><i style="width:${pct}%"></i></div>
       <div class="study">
-        <div class="fcard"><div class="meta"><span>${esc(d.title)}</span><span>${c.ref ? esc(c.ref) : ''}</span></div>
-          <p class="q">${qHTML}</p><p class="hint">${hint}</p></div>
-        <form class="answer" id="ansform" autocomplete="off"><input id="ans" class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type the missing word" aria-label="Your answer"><button class="btn primary" type="submit">${st.revealed ? 'Next' : 'Check'}</button></form>
-        <div class="row"><button class="btn small ghost" data-act="fc-hear">🔊 Read it to me</button>${!st.revealed ? '<button class="btn small ghost" data-act="fc-show">Show me</button>' : ''}</div>
+        <div class="fcard">${card}</div>
+        <form class="answer" id="ansform" autocomplete="off"><input id="ans" class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type the answer" aria-label="Your answer"><button class="btn primary" type="submit" id="st-go">${label}</button></form>
+        <div class="row" id="st-tools">${tools}</div>
       </div></div>`;
-    const inp = $('#ans'); try { inp.focus({ preventScroll: true }); } catch {}
-    $('#ansform').onsubmit = e => { e.preventDefault(); checkCard(k, d, c, inp); };
+      inp = $('#ans');
+    }
+    try { inp.focus({ preventScroll: true }); } catch {}
+    $('#ansform').onsubmit = e => { e.preventDefault(); keepFocus(inp); checkCard(k, d, c, inp); };
     if (young(k) && st.tries === 0 && !st.revealed && !st.spoke) { st.spoke = true; setTimeout(() => readCard(c), 300); }
   }
   function readCard(c) { speech.say(String(c.q).replace(/_{2,}/g, ' blank '), { rate: .85 }); }
@@ -367,30 +380,35 @@
       if (up) cc.box = Math.min(2, (cc.box || 0) + 1); else { cc.box = 0; cc.miss = (cc.miss || 0) + 1; }
     });
   }
+  const CARD_MS = 1200, DRILL_MS = 650; // how long the Correct stamp stays before moving on
+  function cardRight(k, d, note) { // stamp it, then the next card comes by itself; no extra press
+    const st = S.study; st.busy = true;
+    if (note) $('.hint').textContent = note;
+    stamp($('.fcard'), CARD_MS);
+    setTimeout(() => { st.busy = false; if (S.study === st && route()[3] === d.id) nextCard(k, d); }, CARD_MS);
+  }
   function checkCard(k, d, c, inp) {
     const st = S.study, v = norm(inp.value);
+    if (st.busy) return;
     if (st.revealed) {
       // after "Show me" or 3 misses, type it once from the shown answer to lock it in
       if (st.mustType && v !== norm(c.a)) { inp.classList.remove('bad'); void inp.offsetWidth; inp.classList.add('bad'); return; }
+      if (st.mustType) return cardRight(k, d);
       return nextCard(k, d);
     }
     if (!v) return;
     if (v === norm(c.a)) {
-      const firstTry = st.tries === 0;
-      if (firstTry) { st.right++; if ((c.box || 0) < 2) st.moved++; }
+      const firstTry = st.tries === 0, was = c.box || 0;
+      if (firstTry) { st.right++; if (was < 2) st.moved++; }
       moveCard(k, d, c, firstTry);
-      st.revealed = true; st.mustType = false;
-      speech.say(firstTry ? ['Yes!', 'Correct!', 'You got it!', 'Great job!'][st.right % 4] : 'That\'s it.', { rate: 1 });
-      const typed = inp.value;
+      st.revealed = true; st.mustType = false; st.busy = true;
       renderStudy(k, d.id);
-      $('.hint').textContent = firstTry ? (c.box === 1 ? 'Up to the Stairs! 🪜 Press return for the next card.' : 'Up to the Stars! ⭐ Press return for the next card.') : 'You got it! It stays on the Stones for a bit more practice.';
-      const ni = $('#ans'); if (ni) ni.value = typed;
-      return;
+      return cardRight(k, d, !firstTry ? 'It stays on the Stones for a bit more practice.' : was === 2 ? 'Still a star! ⭐' : c.box === 1 ? 'Up to the Stairs! 🪜' : 'Up to the Stars! ⭐');
     }
     st.tries++;
     if (st.tries >= 3) { moveCard(k, d, c, false); st.revealed = true; st.mustType = true; speech.say(`The answer is ${c.a}`, { rate: .85 }); }
     renderStudy(k, d.id);
-    const ni = $('#ans'); if (ni && !st.revealed) { ni.classList.add('bad'); }
+    if (!st.revealed) { void inp.offsetWidth; inp.classList.add('bad'); }
   }
   function nextCard(k, d) {
     const st = S.study; st.i++; st.tries = 0; st.revealed = false; st.mustType = false; st.spoke = false;
@@ -407,74 +425,130 @@
       ${towerHTML(dd.cards)}
       <div class="row" style="justify-content:center"><button class="btn primary big" data-act="fc-again">Go again</button><a class="btn ghost" href="#/kid/${k.id}">Done</a></div>
     </div>`;
+    window.scrollTo(0, 0);
     if (stars === 3) confetti();
   }
 
   /* ---------- math ---------- */
   function renderMath(k) {
     if (S.drill && S.drill.kidId === k.id) return renderDrill(k);
-    const skills = C.skillsFor(k.grade), sel = S.mathSkill[k.id] || (k.math.last && skills.some(s => s.id === k.math.last) ? k.math.last : skills[0] && skills[0].id);
+    const skills = C.skillsForKid(k), sel = [S.mathSkill[k.id], k.math.last, skills[0] && skills[0].id].find(id => skills.some(s => s.id === id));
     S.mathSkill[k.id] = sel;
+    if (!skills.length) {
+      app.innerHTML = `<div class="wrap narrow">
+        <a class="btn ghost small back" href="#/kid/${k.id}">← ${esc(k.name)}</a>
+        <h1 class="h1">Math facts</h1>
+        <div class="card"><p class="h3">No math picked yet</p><p class="muted">Ask a grown-up to pick some. Press and hold the Parents button, then choose Math.</p></div>
+      </div>`;
+      return;
+    }
     app.innerHTML = `<div class="wrap narrow">
       <a class="btn ghost small back" href="#/kid/${k.id}">← ${esc(k.name)}</a>
       <h1 class="h1">Math facts</h1>
-      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture. Or try <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=math">☄️ Falling Facts</a>: problems fall and you type the answer.</p>
+      <p class="muted">Answer 20 problems. Every right answer uncovers part of a hidden picture. Spot what it is and spell it for a bonus!${C.fallingFor(k).length ? ` Or try <a href="apps/spellfall/index.html?kid=${encodeURIComponent(k.id)}&mode=math">☄️ Falling Facts</a>: problems fall and you type the answer.` : ''}</p>
       <div class="skills">${skills.map(s => { const b = k.math.best[s.id]; return `<button class="skill" data-act="m-skill" data-id="${s.id}" aria-pressed="${s.id === sel}"><b>${esc(s.label)}</b><span>${b ? `Best: ${b.right}/20 in ${b.secs}s` : 'New!'}</span></button>`; }).join('')}</div>
       <div class="row"><button class="btn primary big" data-act="m-go" ${sel ? '' : 'disabled'}>Start</button></div>
     </div>`;
   }
   function startDrill(k) {
     const id = S.mathSkill[k.id], sk = C.SKILLS[id]; if (!sk) return;
-    const probs = []; const seen = new Set();
+    const probs = [], seen = new Set(), pics = C.picturesFor(k.grade);
     for (let i = 0; probs.length < 20 && i < 200; i++) { const p = sk.gen(); if (seen.has(p.q) && i < 150) continue; seen.add(p.q); probs.push(p); }
-    S.drill = { kidId: k.id, skill: id, probs, i: 0, right: 0, wrong: 0, miss: [], t0: Date.now(), tries: 0, art: C.PICTURES[Math.floor(Math.random() * C.PICTURES.length)], tiles: shuffle([...Array(20).keys()]), shown: 0, done: false };
+    S.drill = { kidId: k.id, skill: id, probs, i: 0, right: 0, wrong: 0, miss: [], t0: Date.now(), tries: 0, art: pics[Math.floor(Math.random() * pics.length)], tiles: shuffle([...Array(20).keys()]), shown: 0, done: false, guessAt: 3, guessing: false, guessed: false, tried: false };
     store.updateKid(k.id, kk => { kk.math.last = id; });
     renderDrill(k);
   }
   function stopDrill() { if (S.drill && !S.drill.done) S.drill = null; if (S.drill && S.drill.done && !route().includes('math')) S.drill = null; }
-  function picHTML(d) { const off = new Set(d.tiles.slice(0, d.shown)); return `<div class="pic" aria-label="Hidden picture, ${d.shown} of 20 pieces uncovered"><div class="art" aria-hidden="true">${d.art}</div>${[...Array(20).keys()].map(i => `<i class="${off.has(i) ? 'off' : ''}"></i>`).join('')}</div>`; }
+  const PIC_BONUS = 3; // family-goal stars for spelling the hidden picture
+  const uncovered = d => new Set(d.guessed ? d.tiles : d.tiles.slice(0, d.shown));
+  function picHTML(d) { const off = uncovered(d); return `<div class="pic" aria-label="${d.guessed ? `The picture: ${esc(d.art.name)}` : `Hidden picture, ${off.size} of 20 pieces uncovered`}"><div class="art" aria-hidden="true">${d.art.art}</div>${[...Array(20).keys()].map(i => `<i class="${off.has(i) ? 'off' : ''}"></i>`).join('')}</div>`; }
+  function guessRow(d) { // after a wrong guess the button waits for a few more problems
+    if (d.guessed) return `<span class="fine">You spelled it: <b>${esc(d.art.name)}</b>! Finish your problems to collect the bonus.</span>`;
+    const left = d.guessAt - d.i;
+    return `<button class="btn small" data-act="m-guess" ${left > 0 ? 'disabled' : ''}>🔎 I know what it is!</button>${left > 0 ? `<span class="fine">${d.tried ? 'Good try! ' : ''}Solve ${left} more to guess.</span>` : ''}`;
+  }
+  function renderGuess(k) { // spell the hidden picture; the clock waits
+    const d = S.drill, n = esc(d.art.name);
+    app.innerHTML = `<div class="wrap narrow">
+      <div class="spread"><button class="btn ghost small" data-act="m-guess-x">← Back to my problems</button><span class="fine">${esc(C.SKILLS[d.skill].label)}</span></div>
+      ${picHTML(d)}
+      ${d.guessed ? `<h1 class="h2 center">It's the ${n}!</h1>
+        <p class="muted center">You spelled it! When you finish your problems you get a picture found and ${PIC_BONUS} bonus stars.</p>
+        <div class="row" style="justify-content:center"><button class="btn primary big" data-act="m-guess-x">Keep solving</button></div>`
+      : `<h1 class="h2 center">What is the picture? Spell it!</h1>
+        <form class="answer" id="gform" autocomplete="off"><input id="gans" class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="24" aria-label="Spell the picture" placeholder="Type the word"><button class="btn primary" type="submit">Check</button></form>
+        <p class="fine center">Not sure yet? Go back and solve a few more.</p>`}
+    </div>`;
+    if (d.guessed) return stamp($('.pic'), 1500);
+    const inp = $('#gans'); try { inp.focus({ preventScroll: true }); } catch {}
+    $('#gform').onsubmit = e => { e.preventDefault(); checkGuess(k, inp); };
+  }
+  function checkGuess(k, inp) {
+    const d = S.drill; if (!C.guessKey(inp.value)) return;
+    if (C.pictureMatches(d.art, inp.value)) { d.guessed = true; return renderGuess(k); }
+    d.tried = true; d.guessAt = d.i + 3; resumeDrill(k);
+  }
+  function resumeDrill(k) { const d = S.drill; d.guessing = false; d.t0 += Date.now() - d.pausedAt; renderDrill(k); }
+  const mathqClass = t => `mathq ${t.length > 12 ? 'sm' : ''}`;
+  // the chalk font has no minus sign or small digits, so draw a dash and real superscripts in it
+  const mathHTML = t => esc(t).replace(/−/g, '–').replace(/\^\?/g, '<sup>?</sup>').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, c => `<sup>${C.SUPERS.indexOf(c)}</sup>`);
+  function showWorked(p) { const q = $('#mq'), t = C.solvedText(p); q.className = mathqClass(t); q.innerHTML = mathHTML(t); }
   function renderDrill(k) {
     const d = S.drill;
     if (d.done) {
       const secs = Math.round((d.end - d.t0) / 1000), stars = d.right >= 20 ? 3 : d.right >= 16 ? 2 : 1;
       app.innerHTML = `<div class="wrap narrow">
-        <h1 class="h1 center">${d.right === 20 ? 'You found the whole picture!' : `Great work, ${esc(k.name)}!`}</h1>
+        <h1 class="h1 center">${d.right === 20 || d.guessed ? 'You found the whole picture!' : `Great work, ${esc(k.name)}!`}</h1>
         ${picHTML(d)}
+        ${d.guessed ? `<p class="note center">🏆 You spelled it: <b>${esc(d.art.name)}</b>. That's a picture found, plus ${PIC_BONUS} bonus stars!</p>` : d.right === 20 ? `<p class="note center">🏆 It's the ${esc(d.art.name)}. That's a picture found!</p>` : ''}
         <div class="stars-big">${starRow(stars)}</div>
         <div class="res">${d.right}/20</div><p class="muted center">right on the first try · ${secs} seconds${d.isBest ? ' · <b style="color:var(--pink)">new best!</b>' : ''}</p>
-        ${d.miss.length ? `<div class="card"><span class="lbl">Practice these</span><div class="wordchips">${d.miss.map(m => `<span class="wchip">${esc(m.q)} = ${esc(m.a)}</span>`).join('')}</div></div>` : ''}
+        ${d.miss.length ? `<div class="card"><span class="lbl">Practice these</span><div class="wordchips">${d.miss.map(m => `<span class="wchip">${esc(C.solvedText(m))}</span>`).join('')}</div></div>` : ''}
         <div class="row" style="justify-content:center"><button class="btn primary big" data-act="m-again">Again</button><button class="btn ghost" data-act="m-menu">Pick another</button><a class="btn ghost" href="#/kid/${k.id}">Done</a></div>
       </div>`;
+      window.scrollTo(0, 0);
       if (stars === 3) confetti();
       return;
     }
+    if (d.guessing) return renderGuess(k);
     const p = d.probs[d.i];
     app.innerHTML = `<div class="wrap narrow">
       <div class="spread"><button class="btn ghost small" data-act="m-quit">← Stop</button><span class="fine">${esc(C.SKILLS[d.skill].label)}</span></div>
-      <div class="mathbar"><span>Problem <b>${d.i + 1}</b> of 20</span><span>✓ <b>${d.right}</b></span><span id="mclock">${Math.round((Date.now() - d.t0) / 1000)}s</span></div>
+      <div class="mathbar"><span>Problem <b id="mnum">${d.i + 1}</b> of 20</span><span>✓ <b id="mright">${d.right}</b></span><span id="mclock">${Math.round((Date.now() - d.t0) / 1000)}s</span></div>
       ${picHTML(d)}
-      <div class="mathq ${p.q.length > 12 ? 'sm' : ''}">${esc(p.q)}${/=|\?|Round/.test(p.q) ? '' : ' ='}</div>
-      <form class="answer" id="mform" autocomplete="off"><input id="mans" class="inp" ${C.SKILLS[d.skill].neg ? 'inputmode="text"' : 'inputmode="numeric" pattern="[0-9]*"'} autocomplete="off" aria-label="Answer" placeholder="?"><button class="btn primary" type="submit">Check</button></form>
+      <div class="guessrow" id="mguess">${guessRow(d)}</div>
+      <div class="${mathqClass(p.q)}" id="mq">${mathHTML(C.problemText(p))}</div>
+      <form class="answer" id="mform" autocomplete="off" novalidate><input id="mans" class="inp" ${C.SKILLS[d.skill].neg ? 'inputmode="text"' : 'inputmode="numeric" pattern="[0-9]*"'} autocomplete="off" aria-label="Answer" placeholder="?"><button class="btn primary" type="submit">Check</button></form>
       <div class="row"><button class="btn small ghost" data-act="m-hear">🔊 Read it to me</button><span class="fine" id="mmsg" aria-live="polite">${d.tries ? 'Not quite. Try once more!' : ''}</span></div>
     </div>`;
     const inp = $('#mans'); try { inp.focus({ preventScroll: true }); } catch {}
-    $('#mform').onsubmit = e => { e.preventDefault(); answerDrill(k, inp); };
+    $('#mform').onsubmit = e => { e.preventDefault(); keepFocus(inp); answerDrill(k, inp); };
     tickClock();
   }
   let clockT = 0;
   function tickClock() { clearInterval(clockT); clockT = setInterval(() => { const el = $('#mclock'); if (!el || !S.drill || S.drill.done) return clearInterval(clockT); el.textContent = Math.round((Date.now() - S.drill.t0) / 1000) + 's'; }, 500); }
-  function sayProblem(p) { speech.say(p.say || p.q.replace('×', 'times').replace('÷', 'divided by').replace('−', 'minus').replace('+', 'plus'), { rate: .9 }); }
+  function sayProblem(p) { speech.say(C.sayText(p), { rate: .9 }); }
+  function syncPic(d) { const off = uncovered(d); $$('.pic i').forEach((el, i) => el.classList.toggle('off', off.has(i))); }
+  function stepDrill(k, d) { // the next problem appears in place: replacing the input from a timer would drop the iPad keyboard
+    if (S.drill !== d) return;
+    d.busy = false;
+    if (d.i >= d.probs.length) return finishDrill(k);
+    const p = d.probs[d.i], q = $('#mq'), inp = $('#mans'); if (!q || !inp) return renderDrill(k);
+    $('#mnum').textContent = d.i + 1; q.className = mathqClass(p.q); q.innerHTML = mathHTML(C.problemText(p));
+    inp.value = ''; inp.classList.remove('bad'); $('#mmsg').textContent = ''; $('#mguess').innerHTML = guessRow(d); keepFocus(inp);
+  }
   function answerDrill(k, inp) {
-    const d = S.drill, p = d.probs[d.i], v = inp.value.replace(/[^0-9-]/g, '');
-    if (v === '') return;
+    const d = S.drill, p = d.probs[d.i], v = inp.value.replace(/[−–—]/g, '-').replace(/[^0-9-]/g, '');
+    if (v === '' || v === '-' || d.busy) return;
     if (+v === p.a) {
       if (d.tries === 0) { d.right++; d.shown++; } else d.miss.push(p);
-      d.i++; d.tries = 0;
-      if (d.i >= d.probs.length) return finishDrill(k);
-      renderDrill(k);
+      d.i++; d.tries = 0; d.busy = true; d.t0 += DRILL_MS; // the stamp's pause doesn't count against their time
+      $('#mright').textContent = d.right; syncPic(d); showWorked(p);
+      stamp($('#mq'), DRILL_MS);
+      setTimeout(() => stepDrill(k, d), DRILL_MS);
     } else {
       d.tries++;
-      if (d.tries >= 2) { d.miss.push(p); d.wrong++; const msg = $('#mmsg'); msg.textContent = `It's ${p.a}. Let's keep going!`; speech.say(`${p.say || p.q} is ${p.a}`, { rate: .9 }); d.i++; d.tries = 0; setTimeout(() => { if (S.drill === d) { if (d.i >= d.probs.length) finishDrill(k); else renderDrill(k); } }, 1600); inp.disabled = true; return; }
+      if (d.tries >= 2) { d.miss.push(p); d.wrong++; d.busy = true; showWorked(p); $('#mmsg').textContent = `It's ${String(p.a).replace('-', '−')}. Let's keep going!`; speech.say(`The answer is ${p.a}`, { rate: .9 }); d.i++; d.tries = 0; setTimeout(() => stepDrill(k, d), 1600); return; }
       inp.value = ''; inp.classList.remove('bad'); void inp.offsetWidth; inp.classList.add('bad'); $('#mmsg').textContent = 'Not quite. Try once more!';
     }
   }
@@ -484,9 +558,9 @@
     store.updateKid(k.id, kk => {
       const b = kk.math.best[d.skill];
       if (!b || d.right > b.right || (d.right === b.right && secs < b.secs)) { kk.math.best[d.skill] = { right: d.right, secs }; d.isBest = !!b; }
-      if (d.right === 20) kk.math.pics = (kk.math.pics || 0) + 1;
+      if (d.right === 20 || d.guessed) kk.math.pics = (kk.math.pics || 0) + 1;
     });
-    store.log(k.id, { subject: 'math', skill: d.skill, score: d.right, total: 20, secs, points: Math.round(d.right / 2) });
+    store.log(k.id, { subject: 'math', skill: d.skill, score: d.right, total: 20, secs, points: Math.round(d.right / 2) + (d.guessed ? PIC_BONUS : 0) });
     renderDrill(k);
   }
 
@@ -515,12 +589,12 @@
   ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (S.parentOK) S.parentAt = Date.now(); }, true));
 
   /* ---------- parent ---------- */
-  const PTABS = [['kids', 'Kids & progress'], ['spelling', 'Spelling lists'], ['flash', 'Flashcards'], ['today', 'Today plan'], ['settings', 'Settings'], ['backup', 'Backup']];
+  const PTABS = [['kids', 'Kids & progress'], ['spelling', 'Spelling lists'], ['math', 'Math'], ['flash', 'Flashcards'], ['today', 'Today plan'], ['settings', 'Settings'], ['backup', 'Backup']];
   function pk() { const kids = store.kids(); if (!S.pkid || !kids.some(k => k.id === S.pkid)) S.pkid = kids[0] && kids[0].id; return store.kid(S.pkid); }
   function kidTabs() { return `<div class="tabs" role="group" aria-label="Child">${store.kids().map(k => `<button class="tab" data-act="p-kid" data-id="${k.id}" aria-pressed="${k.id === S.pkid}">${esc(k.avatar)} ${esc(k.name)}</button>`).join('')}</div>`; }
   function renderParent() {
     pk();
-    const body = { kids: pKids, spelling: pSpelling, flash: pFlash, today: pToday, settings: pSettings, backup: pBackup }[S.ptab] || pKids;
+    const body = { kids: pKids, spelling: pSpelling, math: pMath, flash: pFlash, today: pToday, settings: pSettings, backup: pBackup }[S.ptab] || pKids;
     app.innerHTML = `<div class="wrap">
       <div class="spread"><h1 class="h1">Parents</h1><div class="row"><a class="btn ghost small" href="#/help">❓ Help</a><a class="btn primary small" href="#/">Done</a></div></div>
       <div class="tabs" role="group" aria-label="Section">${PTABS.map(([id, l]) => `<button class="tab" data-act="p-tab" data-id="${id}" aria-pressed="${S.ptab === id}">${l}</button>`).join('')}</div>
@@ -587,6 +661,25 @@
     const seen = new Set(), out = [];
     for (let w of String(text || '').split(/[\n,;]+/)) { w = w.replace(/^\s*(\d+\s*[.):-]|[-•*·])\s*/, '').replace(/[.!?:"]+$/, '').replace(/\s+/g, ' ').trim(); if (!w || w.length > 32) continue; const kk = w.toLowerCase(); if (seen.has(kk)) continue; seen.add(kk); out.push(w); if (out.length >= 60) break; }
     return out;
+  }
+
+  /* --- math (parent): which skills each child practices --- */
+  function pMath() {
+    const k = pk(); if (!k) return '';
+    const on = new Set(C.mathOnIds(k)), custom = Array.isArray(k.math.on), n = esc(k.name), falling = C.fallingFor(k).length;
+    const grades = s => s.grades.length > 1 ? `${s.grades[0]}–${s.grades[s.grades.length - 1]}` : s.grades[0];
+    const sample = id => S.mathEx[id] || (S.mathEx[id] = C.SKILLS[id].gen().q);
+    return `${kidTabs()}<section class="card">
+        <div class="spread"><h2 class="h3">Math for ${n}</h2><span class="fine">${on.size} skill${on.size === 1 ? '' : 's'} on</span></div>
+        <p class="muted">Turn on what ${n} should practice. This sets both Math facts and Falling Facts. Any skill can be on, even from another grade, so you can move ${n} up or down.</p>
+        ${custom ? `<div class="note spread"><span>These are your choices for ${n}. They stay the same if the grade changes.</span><button class="btn small ghost" data-act="mp-reset">Use the ${esc(gradeLabel(k.grade))} picks</button></div>` : `<p class="fine">Showing the usual picks for ${esc(gradeLabel(k.grade))}. They follow the grade until you change a switch.</p>`}
+        ${!on.size ? `<p class="err">Nothing is on, so ${n}’s math screen will ask for a grown-up. Turn on at least one skill.</p>` : !falling ? `<p class="note">Falling Facts needs a skill that can fall, like adding or times tables. Skills marked “Math facts only” are too wordy for a falling rock.</p>` : ''}
+      </section>
+      <div class="cols">${C.MATH_GROUPS.map(([name, ids]) => `<section class="card"><h3 class="h3">${esc(name)}</h3>${ids.map(id => { const s = C.SKILLS[id]; return `<button class="msw" role="switch" aria-checked="${on.has(id)}" data-act="mp-sw" data-id="${id}"><span class="sw" aria-hidden="true"></span><span class="mt"><b>${esc(s.label)}</b><small>Like ${esc(sample(id))} · ${esc(grades(s))}${C.skillFalls(s) ? '' : ' · Math facts only'}</small></span></button>`; }).join('')}</section>`).join('')}</div>`;
+  }
+  function setMathOn(k, ids) { // matching the grade's defaults saves nothing, so a later grade change still follows along
+    const def = C.defaultMathOn(k.grade);
+    store.updateKid(k.id, kk => { if (ids && !(ids.length === def.length && def.every(id => ids.includes(id)))) kk.math.on = ids; else delete kk.math.on; });
   }
 
   /* --- flashcards (parent): scan, review, decks --- */
@@ -688,7 +781,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     const p = store.family.plan;
     return `<section class="card"><div class="spread"><h2 class="h3">Daily checklist</h2><a class="btn small ghost" href="#/parent/print/all">🖨 Print weekly pages</a></div>
       <p class="muted">Every child sees this list on their Today page. Items linked to a subject check themselves off when a session is finished. Others the child taps when done.</p>
-      <div class="col" style="gap:10px">${p.template.map((it, i) => `<div class="two" style="grid-template-columns:minmax(0,1fr) 180px 42px;align-items:center">
+      <div class="col" style="gap:10px">${p.template.map((it, i) => `<div class="two" style="grid-template-columns:minmax(0,1fr) 180px 44px;align-items:center">
         <input class="inp" data-plabel="${i}" value="${esc(it.label)}" maxlength="40" aria-label="Item ${i + 1}">
         <select class="inp" data-psubj="${i}" aria-label="Links to"><option value="">Tick by hand</option>${Object.entries(SUBJECTS).map(([id, s]) => `<option value="${id}" ${it.subject === id ? 'selected' : ''}>${s.icon} ${s.label}</option>`).join('')}</select>
         <button class="x" data-act="pl-del" data-i="${i}" aria-label="Remove item">×</button></div>`).join('')}</div>
@@ -752,6 +845,8 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
       case 'm-go': case 'm-again': { const k = k0(); S.drill = null; startDrill(k); break; }
       case 'm-menu': { const k = k0(); S.drill = null; renderMath(k); break; }
       case 'm-quit': { const k = k0(); clearInterval(clockT); S.drill = null; renderMath(k); break; }
+      case 'm-guess': { const d = S.drill, k = k0(); if (!d || d.busy || !k) return; d.guessing = true; d.pausedAt = Date.now(); renderDrill(k); break; }
+      case 'm-guess-x': { const k = k0(); if (k && S.drill) resumeDrill(k); break; }
       case 'm-hear': { const d = S.drill; if (d) sayProblem(d.probs[d.i]); try { $('#mans').focus(); } catch {} break; }
       case 'p-tab': S.ptab = el.dataset.id; S.review = null; render(); break;
       case 'p-kid': S.pkid = el.dataset.id; S.review = null; render(); break;
@@ -761,6 +856,8 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
       case 'k-add': { const n = ($('#nk-name').value || '').trim().slice(0, 20); if (!n) return toast('Type a name first.'); const ks = Object.keys(COLORS), i = store.kids().length; store.addKid(n, $('#nk-grade').value, AVATARS[(i * 5 + 4) % AVATARS.length], ks[i % ks.length]); render(); toast(`Added ${n}.`); break; }
       case 'sp-save': { const k = pk(), w = parseWords($('#sp-text').value); if (!w.length) return toast('Type at least one word.'); setSpellingList(k, 'Week of ' + new Date(window.Hub.mondayOf() + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), w); render(); toast(`Saved ${w.length} words for ${k.name}.`); break; }
       case 'sp-use': { const k = pk(), l = C.listsFor(k.grade)[+el.dataset.i]; setSpellingList(k, l.title, l.words.slice()); render(); toast(`“${l.title}” is ${k.name}'s list this week.`); break; }
+      case 'mp-sw': { const k = pk(), on = new Set(C.mathOnIds(k)), id = el.dataset.id; if (on.has(id)) on.delete(id); else on.add(id); setMathOn(k, [...on]); render(); $(`[data-act="mp-sw"][data-id="${id}"]`).focus({ preventScroll: true }); break; }
+      case 'mp-reset': { const k = pk(); setMathOn(k, null); render(); toast(`${k.name} is back to the usual picks for ${gradeLabel(k.grade)}.`); break; }
       case 'f-stop': if (S.scan && S.scan.ctl) S.scan.ctl.abort(); S.scan = null; render(); break;
       case 'f-manual': S.scan = null; S.review = { kidId: pk().id, title: 'My flashcards', subject: '', cards: [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }] }; render(); break;
       case 'f-edit': { const k = pk(), d = k.flashcards.decks.find(x => x.id === el.dataset.id); S.review = { kidId: k.id, deckId: d.id, title: d.title, subject: d.subject, cards: d.cards.map(c => ({ ...c })) }; render(); break; }
@@ -795,7 +892,7 @@ JSON shape: {"title": "short deck title, for example \\"Science Quiz 3: Forces\\
     const t = e.target;
     if (t.dataset.sg !== undefined && setupRows) setupRows[+t.dataset.sg].grade = t.value;
     else if (t.dataset.kname) { const v = t.value.trim().slice(0, 20); if (v) store.updateKid(t.dataset.kname, k => { k.name = v; }); }
-    else if (t.dataset.kgrade) { store.updateKid(t.dataset.kgrade, k => { k.grade = t.value; }); render(); }
+    else if (t.dataset.kgrade) { const k = store.updateKid(t.dataset.kgrade, kk => { kk.grade = t.value; }); render(); if (Array.isArray(k.math.on)) toast(`${k.name}’s math stays as you set it. Change it in Parents → Math.`); }
     else if (t.dataset.psubj !== undefined) { store.family.plan.template[+t.dataset.psubj].subject = t.value || null; store.save(); }
     else if (t.id === 'curric') { store.family.settings.curriculum = t.value; store.save(); toast('Saved.'); }
     else if (t.id === 'mgoal') { store.family.settings.meterGoal = Math.max(10, Math.min(500, +t.value || 60)); store.save(); }

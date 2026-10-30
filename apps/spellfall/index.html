@@ -272,6 +272,10 @@ table.games td,table.games th{padding:7px 8px;border-bottom:1px solid var(--chal
 .hw-word{position:relative;font-weight:700;color:var(--ink);line-height:1;transform:translateY(.2em);transition:filter .8s ease,opacity .8s ease,color .3s;white-space:nowrap}
 .hw-word.hidden{filter:blur(18px);opacity:.4}
 .hw-word.right{color:var(--good)}
+.stamp-host{position:relative}
+.stamp{position:absolute;left:50%;top:50%;z-index:5;transform:translate(-50%,-50%) rotate(-7deg);padding:.04em .34em .1em;border:5px solid var(--good);border-radius:var(--chalk-r);background:rgba(251,250,243,.95);color:var(--good);font-family:var(--f-display);font-weight:700;font-size:clamp(46px,9vw,84px);line-height:1;white-space:nowrap;pointer-events:none;box-shadow:0 8px 22px rgba(0,0,0,.28);animation:stamp 900ms ease-out both}
+@keyframes stamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-7deg) scale(1.7)}16%{opacity:1;transform:translate(-50%,-50%) rotate(-7deg) scale(.95)}24%{transform:translate(-50%,-50%) rotate(-7deg) scale(1)}84%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(-7deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.stamp{animation:none}}
 #hw-cv{position:absolute;left:-24px;top:-24px;width:calc(100% + 48px);height:calc(100% + 48px);pointer-events:none}
 .hw-timer{height:6px;margin-top:14px;border-radius:3px;background:rgba(38,48,58,.12);overflow:hidden}
 .hw-timer i{display:block;height:100%;background:var(--yellow);transform-origin:left center}
@@ -488,9 +492,9 @@ const FACTS = {
   math:{ label:'Math facts', hint:'Type the answer before it lands.' },
   flash:{ label:'Flashcards', hint:'Read the clue at the top. Type the missing word before it lands.' }
 };
-function mathSkills(p) { // only skills whose problems fit on a falling rock: short, no "=" or "?" in them
+function mathSkills(p) { // the same picks as the hub's drills (Parents → Math), minus anything too wordy for a falling rock
   const C = window.HubContent; if (!C) return [];
-  return C.skillsFor(p.grade).filter(sk => { for (let i = 0; i < 6; i++) { const q = sk.gen().q; if (q.length > 14 || /[=?]|^Round/.test(q)) return false; } return true; });
+  return C.fallingFor(HUB.store.kid(p.id) || p);
 }
 function flashCards(p) { const k = HUB.store.kid(p.id); return ((k && k.flashcards.decks) || []).flatMap(d => d.cards).filter(c => c.a && c.q && c.a.length <= 24); }
 const factsReady = (p, m) => m === 'math' ? mathSkills(p).length > 0 : flashCards(p).length > 0;
@@ -882,10 +886,11 @@ function startGame(opts = {}) {
   const lesson = mode === 'type' ? LESSONS[lidx] : null;
   Sfx.init(); Speech.unlock();
   show('game');
+  inp.inputMode = mode === 'math' && !mathSkills(p).some(sk => sk.neg) ? 'numeric' : 'text'; // the number keys for math
   inp.value = ''; try { inp.focus({ preventScroll:true }); } catch { inp.focus(); }
   P.length = 0;
   Object.assign(G, {
-    state:'countdown', p, s, pid:p.id, mode: FACTS[mode] ? 'spell' : mode, src: FACTS[mode] ? mode : null, ans:{}, cards:{}, missedItems:[], lesson, lidx, vmode: lesson || FACTS[mode] ? 'visible' : s.mode,
+    state:'countdown', p, s, pid:p.id, mode: FACTS[mode] ? 'spell' : mode, src: FACTS[mode] ? mode : null, ans:{}, say:{}, cards:{}, missedItems:[], lesson, lidx, vmode: lesson || FACTS[mode] ? 'visible' : s.mode,
     theme:THEMES[p.theme] ? p.theme : 'space', words: lesson || FACTS[mode] ? [] : p.list.words.slice(), listId: lesson || FACTS[mode] ? null : p.list.id,
     objs:[], floats:[], banner:null, t:0, score:0, level:1, spelled:0, fails:0, done:0, spawned:0, total: lesson ? lessonTotal(lesson) : Infinity,
     streak:0, bestStreak:0, typed:'', typedRaw:'', prevLen:0, target:null, completed:false,
@@ -1045,7 +1050,7 @@ function checkHidden() {
     el.classList.add('right'); G.hs = 'right';
     renderDiff(a.letters, c.word);
     setMsg(`${c.tries ? 'You got it this time!' : ['Yes! That’s right.', 'Perfect spelling!', 'You got it!', 'Great memory!'][G.done % 4]}  +${pts}`);
-    Sfx.pop(G.streak); hwTools([]);
+    Sfx.pop(G.streak); hwTools([]); HUB.stamp($('#hw-card'), 1400);
   } else {
     c.tries++; G.streak = 0; stat(k, 'oops');
     if (c.tries >= 3) { stat(k, 'miss'); G.done++; G.results.push({ word:c.word, tries:c.tries, ok:false }); }
@@ -1164,7 +1169,7 @@ function buildBagType() {
 function buildBagFacts() {
   if (G.src === 'math') {
     const sk = mathSkills(G.p), out = [];
-    for (let i = 0; i < 12; i++) { const pr = sk[Math.floor(Math.random() * sk.length)].gen(); G.ans[pr.q] = String(pr.a); out.push(pr.q); }
+    for (let i = 0; i < 12; i++) { const pr = sk[Math.floor(Math.random() * sk.length)].gen(); G.ans[pr.q] = String(pr.a); G.say[pr.q] = window.HubContent.sayText(pr); out.push(pr.q); }
     return out;
   }
   const cards = flashCards(G.p), due = cards.filter(c => (c.box || 0) < 2);
@@ -1180,9 +1185,10 @@ function factLabel(o) {
   if (G.src === 'math') return `${o.word} = ${n ? G.typed : '?'}`;
   return [...o.word].map((c, i) => c === ' ' ? ' ' : i < n ? c : '_').join(' ');
 }
+const spoken = o => (G.src === 'math' && G.say[o.word]) || o.word; // a math rock reads as "7 times 8"
 function factSpawned(o) {
   if (G.src === 'flash') { G.clue = o.card; const el = $('#fclue'); el.textContent = o.card.q.replace(/_{2,}/g, '_____'); el.hidden = false; G.clueY = el.offsetTop + el.offsetHeight + G.fs * .9; if (G.s.speak || G.young) Speech.say(o.card.q.replace(/_{2,}/g, ' blank '), { rate:.85 }); }
-  else if (G.s.speak) Speech.say(o.word.replace(/×/g, 'times').replace(/÷/g, 'divided by').replace(/−/g, 'minus').replace(/²/g, ' squared'), { rate:.9 });
+  else if (G.s.speak) Speech.say(spoken(o), { rate:.9 });
 }
 const makeBag = () => G.src ? buildBagFacts() : G.mode === 'type' ? buildBagType() : buildBag();
 function nextWord() {
@@ -1246,7 +1252,7 @@ function fail(o) {
   if (G.mode === 'type') { const d = (G.target === o && G.typed && o.key.startsWith(G.typed)) ? [...G.typed].length : 0; const rest = [...o.key].slice(d); G.tk.missed += rest.length; rest.forEach(c => kstat(c, 'miss')); }
   G.done++;
   G.objs.splice(G.objs.indexOf(o), 1); if (G.src === 'flash') $('#fclue').hidden = true;
-  if (G.src) G.missedItems.push(G.src === 'math' ? `${o.word} = ${G.ans[o.word]}` : o.word);
+  if (G.src) G.missedItems.push(G.src === 'math' ? window.HubContent.solvedText({ q:o.word, a:G.ans[o.word] }) : o.word);
   G.fails++; G.streak = 0; stat(o.key, 'miss');
   THEMES[G.theme].miss(x, GY); Sfx.miss(); if (!RM) G.shake = .35;
   ctx.font = `700 ${G.fs * .9}px ${FONT}`;
@@ -1288,7 +1294,7 @@ function submit() {
   const close = G.objs.map(o => [o, lev(v, o.key)]).sort((a, b) => a[1] - b[1] || b[0].p - a[0].p)[0];
   if (close) { const o = close[0]; stat(o.key, 'oops'); o.peekUntil = G.t + 1.6; G.floats.push({ text:'Almost! Check it', x:objX(o), y:objY(o) - G.fs * 1.4, life:0, max:1.2, color:'#FFE3A3', size:G.fs * .6 }); }
 }
-function repeatWord() { const o = G.objs.slice().sort((a, b) => b.p - a.p)[0]; if (o) Speech.say(o.word, { rate:G.young ? .75 : .85, interrupt:true }); }
+function repeatWord() { const o = G.objs.slice().sort((a, b) => b.p - a.p)[0]; if (o) Speech.say(spoken(o), { rate:G.young ? .75 : .85, interrupt:true }); }
 
 inp.addEventListener('input', onType);
 inp.addEventListener('animationend', () => inp.classList.remove('bad'));
@@ -1313,7 +1319,7 @@ cv.addEventListener('pointerdown', e => {
   if (G.state === 'play') {
     const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     const o = G.objs.find(o => o.box && x >= o.box.x - 10 && x <= o.box.x + o.box.w + 10 && y >= o.box.y - 10 && y <= o.box.y + o.box.h + 10);
-    if (o) Speech.say(o.word, { rate:G.young ? .75 : .85, interrupt:true });
+    if (o) Speech.say(spoken(o), { rate:G.young ? .75 : .85, interrupt:true });
   }
   if (G.state === 'play' || G.state === 'countdown') { try { inp.focus({ preventScroll:true }); } catch {} }
 });
@@ -1602,7 +1608,7 @@ function renderLobby() {
   if (FACTS[mode]) {
     const ok = factsReady(p, mode), cards = mode === 'flash' ? flashCards(p) : [];
     $('#l-paper').innerHTML = !ok
-      ? (mode === 'math' ? `<div class="paper-empty"><p>No falling math for this grade yet.</p></div>` : `<div class="paper-empty"><p>No flashcards yet.</p><p class="fine">Ask a grown-up to make a deck in Parents → Flashcards.</p></div>`)
+      ? (mode === 'math' ? `<div class="paper-empty"><p>No falling math turned on.</p><p class="fine">Ask a grown-up to turn on adding or times tables in Parents → Math.</p></div>` : `<div class="paper-empty"><p>No flashcards yet.</p><p class="fine">Ask a grown-up to make a deck in Parents → Flashcards.</p></div>`)
       : mode === 'math'
         ? `<div class="paper-title"><span>${esc(gradeLabel(p.grade))}</span><span>mixed</span></div><div class="lines" style="grid-template-columns:1fr">${mathSkills(p).map(sk => `<div class="line sm" style="font-size:24px"><span>${esc(sk.label)}</span></div>`).join('')}</div>`
         : `<div class="paper-title"><span>Answers to know</span><span>${cards.length} cards</span></div><div class="lines">${cards.slice(0, 12).map(c => `<div class="line"><span>${esc(c.a)}</span></div>`).join('')}</div>`;

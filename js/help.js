@@ -14,6 +14,7 @@
     ['Scan the spelling list from school', 'lists'],
     ['Turn a quiz or study sheet into flashcards', 'flashcards'],
     ['Give a spelling test out loud', 'spelling'],
+    ['Choose which math each child practices', 'math'],
     ['Practice phonics sounds (K–2nd)', 'phonics'],
     ['Launch the spelling rocket', 'rocket'],
     ['Make the spelling game easier or harder', 'spelling'],
@@ -139,7 +140,7 @@
     { id: 'flashcards', icon: '🃏', title: 'Flashcards', sub: 'Climb the tower', body: `
       <p>Flashcards are fill-in-the-blank sentences. Cards climb a tower as your child learns them: <b>🪨 Stones</b> (new), <b>🪜 Stairs</b> (getting it), <b>⭐ Stars</b> (learned).</p>
       <ul>
-        <li>Right on the first try moves a card up. A miss sends it back to the Stones.</li>
+        <li>A right answer stamps <b>Correct!</b> and the next card comes by itself. Right on the first try moves a card up. A miss sends it back to the Stones.</li>
         <li>After a miss your child gets a hint (the letter count, then the first letter). After three misses, or <b>Show me</b>, the answer appears and they type it once.</li>
         <li><b>Read it to me</b> reads the card aloud. Cards read themselves for K–2nd grade.</li>
         <li>Each practice is up to 12 cards: the new ones and the ones still climbing.</li>
@@ -153,16 +154,25 @@
       <p><b>Falling flashcards</b>: on the Flashcards screen tap <b>Falling flashcards</b>, or choose <b>Flashcards</b> in the spelling game. A clue shows at the top and its answer falls as blanks; your child types it before it lands. It’s for practice and doesn’t move cards up the tower.</p>
       <p>No scanning? Tap <b>Type cards</b> to make them by hand. Each deck can be edited, restarted from the Stones, or deleted.</p>` },
 
-    { id: 'math', icon: '➗', title: 'Math facts', sub: '20-problem drills with a hidden picture', body: `
-      <p>Your child picks a skill for their grade (adding, subtracting, times tables, and more) and answers 20 problems. Each right answer uncovers part of a hidden picture.</p>
+    { id: 'math', icon: '🧮', title: 'Math facts', sub: '20-problem drills with a hidden picture', body: `
+      <p>Your child picks a skill and answers 20 problems. Each right answer uncovers part of a hidden picture.</p>
       <ul>
         <li>A wrong answer gets one more try. After that the answer is shown and the drill moves on.</li>
         <li>The end screen shows the score, time, a new best, and a <b>Practice these</b> list of misses.</li>
-        <li>All 20 right on the first try reveals the whole picture and adds to their pictures found.</li>
         <li><b>Read it to me</b> reads the problem aloud.</li>
       </ul>
-      <p><b>Falling Facts</b>: tap <b>Falling Facts</b> on the Math screen, or choose <b>Math facts</b> in the spelling game. Problems for your child’s grade fall from the sky and they type each answer before it lands. Same worlds, speed and miss settings as the spelling game.</p>
-      <p class="fine">Skills change with the grade you set for each child, from adding to 10 in kindergarten to equations and slope in 8th grade. For negative answers (7th and 8th grade), type a minus sign first, like -3.</p>` },
+      <h3>Guess the hidden picture</h3>
+      <p>After a few problems your child can tap <b>I know what it is!</b> and spell the picture. Spelling it right shows the whole picture and earns a picture found plus 3 bonus stars for the family goal when they finish their 20 problems. So nobody skips the math.</p>
+      <p>A wrong guess costs nothing. They just solve 3 more problems before guessing again. Getting all 20 right on the first try also counts as a picture found. Kindergarten to 2nd grade get easier pictures to spell, like <i>car</i> and <i>fish</i>.</p>
+      <p><b>Falling Facts</b>: tap <b>Falling Facts</b> on the Math screen, or choose <b>Math facts</b> in the spelling game. The math you’ve turned on falls from the sky and they type each answer before it lands. Same worlds, speed and miss settings as the spelling game.</p>
+      <h3>Choose the math</h3>
+      <p><b>Parents → Math</b>, then pick the child. Each skill has an on/off switch, grouped as Adding, Subtracting, Multiplying, Dividing and so on. What you turn on is exactly what shows up in Math facts and Falling Facts, for that child only. Any skill can be on, even from another grade, so you can move a child up or down.</p>
+      <ul>
+        <li>Until you change a switch, each child gets the usual picks for their grade and they follow the grade. Kindergarten starts with adding to 10, 1st grade with adding only, 2nd grade with adding, subtracting and number skills but no multiplying yet, and 3rd grade and up with everything for their grade.</li>
+        <li>Once you change a switch, your choices stay put if the grade changes. <b>Use the grade’s picks</b> goes back to the usual ones.</li>
+        <li>Skills marked <b>Math facts only</b>, like Tens and ones, use words, so they stay in Math facts and don’t fall in Falling Facts.</li>
+      </ul>
+      <p class="fine">For negative answers, type a minus sign first, like -3.</p>` },
 
     { id: 'goal', icon: '🏆', title: 'Family goal', sub: 'One shared weekly meter', body: `
       <p>All your kids fill one meter together each week, so a brother’s win is everyone’s win. There’s no leaderboard and no comparing.</p>
